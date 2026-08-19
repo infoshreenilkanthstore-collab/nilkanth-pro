@@ -252,7 +252,61 @@ export default function ProductDetails({ handle }) {
         }
     }, [product?.id]);
 
-  
+    useEffect(() => {
+        if (product) {
+            const recentlyViewed = JSON.parse(localStorage.getItem('ns_recentlyViewed') || '[]');
+            const updated = [product, ...recentlyViewed.filter(p => p.id !== product.id)].slice(0, 10);
+            localStorage.setItem('ns_recentlyViewed', JSON.stringify(updated));
+
+            // Sync lastCollection with the current product
+            const productCollections = product.collections?.edges?.map(e => e.node.handle) || [];
+            const currentCollectionHandle = lastCollection?.href?.split('/').pop();
+            const isProductInLastCollection = currentCollectionHandle && productCollections.includes(currentCollectionHandle);
+
+            if (!lastCollection || !isProductInLastCollection) {
+                const firstCollection = product.collections?.edges?.[0]?.node;
+                if (firstCollection) {
+                    updateLastCollection({
+                        label: firstCollection.title,
+                        href: `/collections/${firstCollection.handle}`
+                    });
+                }
+            }
+        }
+    }, [product, lastCollection, updateLastCollection]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 800) {
+                setShowSticky(true);
+            } else {
+                setShowSticky(false);
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+    
+       useEffect(() => {
+        if (!product) return;
+
+        if (typeof window !== "undefined" && window.fbq) {
+            const price =
+                selectedVariant?.price?.amount ||
+                selectedVariant?.priceV2?.amount ||
+                product?.priceRange?.minVariantPrice?.amount ||
+                product?.price ||
+                0;
+
+            window.fbq('track', 'ViewContent', {
+                content_ids: [product.id],
+                content_name: product.title,
+                content_type: 'product',
+                value: Number(price),
+                currency: 'INR'
+            });
+        }
+    }, [product, selectedVariant]);
 
 
     const handleReviewSubmit = async (e) => {
@@ -289,40 +343,7 @@ export default function ProductDetails({ handle }) {
             setIsSubmitting(false);
         }
     };
-  useEffect(() => {
-        if (product) {
-            const recentlyViewed = JSON.parse(localStorage.getItem('ns_recentlyViewed') || '[]');
-            const updated = [product, ...recentlyViewed.filter(p => p.id !== product.id)].slice(0, 10);
-            localStorage.setItem('ns_recentlyViewed', JSON.stringify(updated));
 
-            // Sync lastCollection with the current product
-            const productCollections = product.collections?.edges?.map(e => e.node.handle) || [];
-            const currentCollectionHandle = lastCollection?.href?.split('/').pop();
-            const isProductInLastCollection = currentCollectionHandle && productCollections.includes(currentCollectionHandle);
-
-            if (!lastCollection || !isProductInLastCollection) {
-                const firstCollection = product.collections?.edges?.[0]?.node;
-                if (firstCollection) {
-                    updateLastCollection({
-                        label: firstCollection.title,
-                        href: `/collections/${firstCollection.handle}`
-                    });
-                }
-            }
-        }
-    }, [product, lastCollection, updateLastCollection]);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 800) {
-                setShowSticky(true);
-            } else {
-                setShowSticky(false);
-            }
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
     // Review Summary Calculations
     const totalReviews = product?.total_reviews || reviews.length;
 
@@ -413,26 +434,7 @@ export default function ProductDetails({ handle }) {
     // Strip HTML `class=` attributes to prevent React DOM warnings (Shopify returns raw HTML)
     const rawHTML = product.descriptionHtml || `<p>${product.description}</p>`;
     const cleanHTML = rawHTML.replace(/\sclass=/g, " data-class=");
-    useEffect(() => {
-        if (!product) return;
 
-        if (typeof window !== "undefined" && window.fbq) {
-            const price =
-                selectedVariant?.price?.amount ||
-                selectedVariant?.priceV2?.amount ||
-                product?.priceRange?.minVariantPrice?.amount ||
-                product?.price ||
-                0;
-
-            window.fbq('track', 'ViewContent', {
-                content_ids: [product.id],
-                content_name: product.title,
-                content_type: 'product',
-                value: Number(price),
-                currency: 'INR'
-            });
-        }
-    }, [product, selectedVariant]);
     return (
         <div className="max-w-[1400px] mx-auto  font-nunito">
             <div className="grid grid-cols-1 px-2 md:px-12 lg:px-6 py-1 md:py-2 lg:grid-cols-[57%_37%] gap-0 lg:gap-12">
