@@ -12,7 +12,7 @@ export default function Footer() {
     const currentYear = new Date().getFullYear();
 
     const supportContacts = [
-        { title: "Sales Support", number: "9726778118" },
+        { title: "Sales Support", number: "8980978118" },
         { title: "After Sales Support", number: "9310501040" },
         { title: "Complain & Grievance", number: "9824878118" },
     ];
