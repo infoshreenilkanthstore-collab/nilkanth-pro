@@ -252,40 +252,7 @@ export default function ProductDetails({ handle }) {
         }
     }, [product?.id]);
 
-    useEffect(() => {
-        if (product) {
-            const recentlyViewed = JSON.parse(localStorage.getItem('ns_recentlyViewed') || '[]');
-            const updated = [product, ...recentlyViewed.filter(p => p.id !== product.id)].slice(0, 10);
-            localStorage.setItem('ns_recentlyViewed', JSON.stringify(updated));
-
-            // Sync lastCollection with the current product
-            const productCollections = product.collections?.edges?.map(e => e.node.handle) || [];
-            const currentCollectionHandle = lastCollection?.href?.split('/').pop();
-            const isProductInLastCollection = currentCollectionHandle && productCollections.includes(currentCollectionHandle);
-
-            if (!lastCollection || !isProductInLastCollection) {
-                const firstCollection = product.collections?.edges?.[0]?.node;
-                if (firstCollection) {
-                    updateLastCollection({
-                        label: firstCollection.title,
-                        href: `/collections/${firstCollection.handle}`
-                    });
-                }
-            }
-        }
-    }, [product, lastCollection, updateLastCollection]);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 800) {
-                setShowSticky(true);
-            } else {
-                setShowSticky(false);
-            }
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+  
 
 
     const handleReviewSubmit = async (e) => {
@@ -322,7 +289,40 @@ export default function ProductDetails({ handle }) {
             setIsSubmitting(false);
         }
     };
+  useEffect(() => {
+        if (product) {
+            const recentlyViewed = JSON.parse(localStorage.getItem('ns_recentlyViewed') || '[]');
+            const updated = [product, ...recentlyViewed.filter(p => p.id !== product.id)].slice(0, 10);
+            localStorage.setItem('ns_recentlyViewed', JSON.stringify(updated));
 
+            // Sync lastCollection with the current product
+            const productCollections = product.collections?.edges?.map(e => e.node.handle) || [];
+            const currentCollectionHandle = lastCollection?.href?.split('/').pop();
+            const isProductInLastCollection = currentCollectionHandle && productCollections.includes(currentCollectionHandle);
+
+            if (!lastCollection || !isProductInLastCollection) {
+                const firstCollection = product.collections?.edges?.[0]?.node;
+                if (firstCollection) {
+                    updateLastCollection({
+                        label: firstCollection.title,
+                        href: `/collections/${firstCollection.handle}`
+                    });
+                }
+            }
+        }
+    }, [product, lastCollection, updateLastCollection]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 800) {
+                setShowSticky(true);
+            } else {
+                setShowSticky(false);
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
     // Review Summary Calculations
     const totalReviews = product?.total_reviews || reviews.length;
 
