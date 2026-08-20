@@ -114,7 +114,7 @@ export default function FloatingWidgets() {
 
             {/* WhatsApp Widget */}
             <a
-                href="https://wa.me/918980978118" // Replace with actual number if needed
+                href="https://wa.me/91XXXXXXXXXX" // Replace with actual number if needed
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 md:w-12 md:h-12 bg-[#25D366] text-white rounded-full shadow-xl shadow-[#25D366]/20 flex items-center justify-center hover:bg-[#128C7E] hover:-translate-y-1 transition-all duration-300"

@@ -6,7 +6,7 @@ export default function DoubleImageBanner({
     subtitle = "Pooja Saman",
     description = "At Shri Nilkanth Store, we bring divinity closer to your home. Our handpicked spiritual products are designed to elevate your pooja space with purity, tradition, and grace. Each item is crafted with care — blending age-old rituals with modern aesthetics for your sacred moments.",
     buttonText = "Shop Collection",
-    buttonLink = "/collections/pooja-samagri",
+    buttonLink = "/collections",
     // Left side image (Pooja decoration/Samaagri)
     mainImageUrl = "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/2e60e78829fb62d88e047443760b3bbc.webp?v=1774247435",
     // Background watermark/icon for the left side

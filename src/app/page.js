@@ -10,6 +10,7 @@ import CollectionTabsSlider from "@/components/CollectionTabsSlider";
 import BestSeller from "@/components/BestSeller";
 import FAQSection from "@/components/FAQSection";
 import ImageGallery from "@/components/ImageGallery";
+import TrustAndStorySection from "@/components/TrustAndStorySection";
 
 export default function Home() {
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function Home() {
       <HomeProductList />
       <FAQSection />
       <ImageGallery />
+      <TrustAndStorySection />
     </>
   );
 }

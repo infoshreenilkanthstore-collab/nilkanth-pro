@@ -15,6 +15,59 @@ import Pagination from '@/components/Pagination';
 
 const PAGE_SIZE = 12;
 
+// Helper to extract weight/size options from product options and variants
+function getProductWeightValues(node) {
+    const values = new Set();
+    const targetOptionNames = ['weight', 'size', 'volume', 'net wt', 'net weight', 'quantity'];
+
+    // 1. Check options
+    const matchedOpt = node.options?.find(opt =>
+        targetOptionNames.includes(opt.name?.toLowerCase().trim())
+    );
+    if (matchedOpt && Array.isArray(matchedOpt.values)) {
+        matchedOpt.values.forEach(v => {
+            if (v && v.toLowerCase() !== 'default title' && v.toLowerCase() !== 'default') {
+                values.add(v.trim());
+            }
+        });
+    }
+
+    // 2. Check variants
+    const variants = Array.isArray(node.variants)
+        ? node.variants
+        : (node.variants?.edges?.map(e => e.node) || []);
+
+    variants.forEach(v => {
+        if (v?.title && v.title.toLowerCase() !== 'default title' && v.title.toLowerCase() !== 'default' && v.title.trim()) {
+            values.add(v.title.trim());
+        }
+        if (Array.isArray(v?.selectedOptions)) {
+            v.selectedOptions.forEach(opt => {
+                if (opt?.value && opt.value.toLowerCase() !== 'default title' && opt.value.toLowerCase() !== 'default' && opt.value.trim()) {
+                    if (targetOptionNames.includes(opt.name?.toLowerCase().trim()) || opt.name?.toLowerCase().trim() === 'title') {
+                        values.add(opt.value.trim());
+                    }
+                }
+            });
+        }
+    });
+
+    // 3. Fallback: Check any non-default option
+    if (values.size === 0 && Array.isArray(node.options)) {
+        node.options.forEach(opt => {
+            if (opt.name?.toLowerCase() !== 'title' || (opt.values && opt.values.length > 1)) {
+                opt.values?.forEach(v => {
+                    if (v && v.toLowerCase() !== 'default title' && v.toLowerCase() !== 'default' && v.trim()) {
+                        values.add(v.trim());
+                    }
+                });
+            }
+        });
+    }
+
+    return Array.from(values);
+}
+
 export default async function AllProductsPage({ searchParams }) {
     const sParams = await searchParams;
     const currentPage = sParams.page ? parseInt(sParams.page) : 1;
@@ -78,16 +131,14 @@ export default async function AllProductsPage({ searchParams }) {
         ]
     });
 
-    // 3. Weight Filter (Calculated from options)
+    // 3. Weight Filter (Calculated from options & variants)
     const weightOptions = new Map();
     allProducts.forEach(({ node }) => {
-        const weightOpt = node.options?.find(opt => opt.name.toLowerCase() === 'weight');
-        if (weightOpt) {
-            weightOpt.values.forEach(val => {
-                const currentCount = weightOptions.get(val) || 0;
-                weightOptions.set(val, currentCount + 1);
-            });
-        }
+        const weights = getProductWeightValues(node);
+        weights.forEach(val => {
+            const currentCount = weightOptions.get(val) || 0;
+            weightOptions.set(val, currentCount + 1);
+        });
     });
 
     if (weightOptions.size > 0) {
@@ -130,8 +181,8 @@ export default async function AllProductsPage({ searchParams }) {
     if (sParams.weight) {
         const selectedWeights = Array.isArray(sParams.weight) ? sParams.weight : [sParams.weight];
         filteredProducts = filteredProducts.filter(({ node }) => {
-            const weightOpt = node.options?.find(opt => opt.name.toLowerCase() === 'weight');
-            return weightOpt && weightOpt.values.some(v => selectedWeights.includes(v));
+            const productWeights = getProductWeightValues(node);
+            return productWeights.some(w => selectedWeights.includes(w));
         });
     }
 

@@ -156,7 +156,7 @@ export default function Header() {
         ],
         right: [
             { label: "About Us", href: "/about" },
-            // { label: "Contact Us", href: "/contact" }
+            { label: "Contact Us", href: "/contact" }
         ]
     };
 

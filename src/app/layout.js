@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Nilkanth Store",
-  description: "Attractive and premium online store",
+  description: "Discover traditional religious and spiritual products including Pooja Saman, Vastu items, Yantras, Murtis, Pital & Copper products, Perfume, Attar, Agarbatti, Dhoop, and more.",
 };
 
 export default function RootLayout({ children }) {

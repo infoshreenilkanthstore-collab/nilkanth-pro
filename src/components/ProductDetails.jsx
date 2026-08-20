@@ -286,27 +286,6 @@ export default function ProductDetails({ handle }) {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-    
-       useEffect(() => {
-        if (!product) return;
-
-        if (typeof window !== "undefined" && window.fbq) {
-            const price =
-                selectedVariant?.price?.amount ||
-                selectedVariant?.priceV2?.amount ||
-                product?.priceRange?.minVariantPrice?.amount ||
-                product?.price ||
-                0;
-
-            window.fbq('track', 'ViewContent', {
-                content_ids: [product.id],
-                content_name: product.title,
-                content_type: 'product',
-                value: Number(price),
-                currency: 'INR'
-            });
-        }
-    }, [product, selectedVariant]);
 
 
     const handleReviewSubmit = async (e) => {
@@ -434,9 +413,76 @@ export default function ProductDetails({ handle }) {
     // Strip HTML `class=` attributes to prevent React DOM warnings (Shopify returns raw HTML)
     const rawHTML = product.descriptionHtml || `<p>${product.description}</p>`;
     const cleanHTML = rawHTML.replace(/\sclass=/g, " data-class=");
+    useEffect(() => {
+        if (!product) return;
+
+        if (typeof window !== "undefined" && window.fbq) {
+            const price =
+                selectedVariant?.price?.amount ||
+                selectedVariant?.priceV2?.amount ||
+                product?.priceRange?.minVariantPrice?.amount ||
+                product?.price ||
+                0;
+
+            window.fbq('track', 'ViewContent', {
+                content_ids: [product.id],
+                content_name: product.title,
+                content_type: 'product',
+                value: Number(price),
+                currency: 'INR'
+            });
+        }
+    }, [product, selectedVariant]);
+    // Generate Product JSON-LD Schema for Google & Rich Snippets
+    const productIdClean = String(product?.id || "").replace(/^gid:\/\/shopify\/Product\//, "");
+    const variantIdClean = String(selectedVariant?.id || "").replace(/^gid:\/\/shopify\/ProductVariant\//, "");
+    const productSku = selectedVariant?.sku || selectedVariant?.barcode || variantIdClean || productIdClean;
+    const productImages = images.length > 0 ? images.map(img => img.url).filter(Boolean) : (mainImage ? [mainImage] : []);
+    const plainDescription = product?.description
+        ? product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+        : (product?.descriptionHtml ? product.descriptionHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : product?.title || "");
+    const currentProductUrl = typeof window !== "undefined" ? window.location.href : "";
+
+    const productSchema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "productID": productIdClean || String(product.id),
+        "sku": productSku,
+        "name": product.title,
+        "image": productImages,
+        "description": plainDescription,
+        ...(product.vendor ? {
+            "brand": {
+                "@type": "Brand",
+                "name": product.vendor
+            }
+        } : {}),
+        "offers": {
+            "@type": "Offer",
+            "url": currentProductUrl,
+            "priceCurrency": currency || "INR",
+            "price": priceAmount ? Number(priceAmount) : 0,
+            "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition"
+        },
+        ...(totalReviews > 0 ? {
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": Number(averageRating.toFixed(1)),
+                "reviewCount": totalReviews,
+                "bestRating": "5",
+                "worstRating": "1"
+            }
+        } : {})
+    };
 
     return (
         <div className="max-w-[1400px] mx-auto  font-nunito">
+            {/* Google / Schema.org Product Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+            />
             <div className="grid grid-cols-1 px-2 md:px-12 lg:px-6 py-1 md:py-2 lg:grid-cols-[57%_37%] gap-0 lg:gap-12">
                 {/* Left Side: Images */}
                 <div className="flex flex-col-reverse md:flex-row gap-0 md:gap-4 lg:sticky lg:top-32 h-fit items-start md:items-stretch">

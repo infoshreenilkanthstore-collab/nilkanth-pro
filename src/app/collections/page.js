@@ -80,10 +80,59 @@ export default function AllCollectionsPage() {
         );
     }
 
+    // --- JSON-LD SCHEMA FOR ALL COLLECTIONS PAGE ---
+    const allCollectionsSchema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "All Collections | Nilkanth Store",
+        "description": "Discover all authentic devotional collections including Pooja Samagri, Murtis, Pital & Copper, Agarbatti, Dhoop, Attar and spiritual essentials at Nilkanth Store.",
+        "url": "https://nilkanthstore.in/collections",
+        "mainEntity": {
+            "@type": "ItemList",
+            "numberOfItems": collections.length,
+            "itemListElement": collections.map((col, index) => {
+                const colImage = col.image?.url || col.image_url || "";
+                return {
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "url": `https://nilkanthstore.in/collections/${col.handle}`,
+                    "name": col.title,
+                    ...(colImage ? { "image": colImage } : {})
+                };
+            })
+        }
+    };
+
+    const allCollectionsBreadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://nilkanthstore.in"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Collections",
+                "item": "https://nilkanthstore.in/collections"
+            }
+        ]
+    };
+
     return (
         <main className="min-h-screen pb-20">
-
-
+            {/* Schema.org CollectionPage & Breadcrumb Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(allCollectionsSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(allCollectionsBreadcrumbSchema) }}
+            />
 
             {/* ── Controls ────────────────────────────────────────────────────── */}
             <div className="max-w-7xl mx-auto px-4 md:px-8 mt-10 mb-6 flex items-center justify-between flex-wrap gap-4">

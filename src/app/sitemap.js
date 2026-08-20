@@ -56,7 +56,7 @@ export default async function sitemap() {
     '/blogs',
     '/bulk-order',
     '/collections',
-    // '/contact',
+    '/contact',
     '/faq',
     '/privacy-policy',
     '/return-policy',
