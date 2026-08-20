@@ -1,13 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import CartSidebar from "@/components/CartSidebar";
-import WishlistSidebar from "@/components/WishlistSidebar";
-import FloatingWidgets from "@/components/FloatingWidgets";
-import LoginPopup from "@/components/LoginPopup";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import Breadcrumbs from "../components/Breadcrumbs";
+import CartSidebar from "../components/CartSidebar";
+import WishlistSidebar from "../components/WishlistSidebar";
+import FloatingWidgets from "../components/FloatingWidgets";
+import LoginPopup from "../components/LoginPopup";
 import { useWishlist } from "@/context/WishlistContext";
 import { Toaster } from "react-hot-toast";
 

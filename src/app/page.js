@@ -3,13 +3,13 @@
 import { useEffect } from "react";
 import HeroSlider from "@/components/HeroSlider";
 import ProductMarquee from "@/components/ProductMarquee";
-import DoubleImageBanner from "@/components/DoubleImageBanner";
+import DoubleImageBanner from "../components/DoubleImageBanner";
 import HomeProductList from "@/components/HomeProductList";
 import ShopByCategories from "@/components/ShopByCategories";
 import CollectionTabsSlider from "@/components/CollectionTabsSlider";
-import BestSeller from "@/components/BestSeller";
-import FAQSection from "@/components/FAQSection";
-import ImageGallery from "@/components/ImageGallery";
+import BestSeller from "../components/BestSeller";
+import FAQSection from "../components/FAQSection";
+import ImageGallery from "../components/ImageGallery";
 import TrustAndStorySection from "../components/TrustAndStorySection";
 
 export default function Home() {
