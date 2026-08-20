@@ -286,7 +286,26 @@ export default function ProductDetails({ handle }) {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+   useEffect(() => {
+        if (!product) return;
 
+        if (typeof window !== "undefined" && window.fbq) {
+            const price =
+                selectedVariant?.price?.amount ||
+                selectedVariant?.priceV2?.amount ||
+                product?.priceRange?.minVariantPrice?.amount ||
+                product?.price ||
+                0;
+
+            window.fbq('track', 'ViewContent', {
+                content_ids: [product.id],
+                content_name: product.title,
+                content_type: 'product',
+                value: Number(price),
+                currency: 'INR'
+            });
+        }
+    }, [product, selectedVariant]);
 
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
@@ -413,26 +432,7 @@ export default function ProductDetails({ handle }) {
     // Strip HTML `class=` attributes to prevent React DOM warnings (Shopify returns raw HTML)
     const rawHTML = product.descriptionHtml || `<p>${product.description}</p>`;
     const cleanHTML = rawHTML.replace(/\sclass=/g, " data-class=");
-    useEffect(() => {
-        if (!product) return;
-
-        if (typeof window !== "undefined" && window.fbq) {
-            const price =
-                selectedVariant?.price?.amount ||
-                selectedVariant?.priceV2?.amount ||
-                product?.priceRange?.minVariantPrice?.amount ||
-                product?.price ||
-                0;
-
-            window.fbq('track', 'ViewContent', {
-                content_ids: [product.id],
-                content_name: product.title,
-                content_type: 'product',
-                value: Number(price),
-                currency: 'INR'
-            });
-        }
-    }, [product, selectedVariant]);
+ 
     // Generate Product JSON-LD Schema for Google & Rich Snippets
     const productIdClean = String(product?.id || "").replace(/^gid:\/\/shopify\/Product\//, "");
     const variantIdClean = String(selectedVariant?.id || "").replace(/^gid:\/\/shopify\/ProductVariant\//, "");
