@@ -3,12 +3,12 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { CartSidebarProvider } from "@/context/CartSidebarContext";
-import { BreadcrumbProvider } from "@/context/BreadcrumbContext";
-import { WishlistProvider } from "@/context/WishlistContext";
-import LayoutShell from "@/components/LayoutShell";
+import { CartSidebarProvider } from "../context/CartSidebarContext";
+import { BreadcrumbProvider } from "../context/BreadcrumbContext";
+import { WishlistProvider } from "../context/WishlistContext";
+import LayoutShell from "../components/LayoutShell";
 import Script from "next/script";
-import MarketingScriptInjector from "@/components/MarketingScriptInjector";
+import MarketingScriptInjector from "../components/MarketingScriptInjector";
 import { CHECKOUT_SDK_URL } from "@/lib/checkout";
 
 const geistSans = Geist({
