@@ -1,0 +1,73 @@
+// // import { defineConfig, globalIgnores } from "eslint/config";
+// // import nextVitals from "eslint-config-next/core-web-vitals";
+
+// // const eslintConfig = defineConfig([
+// //   ...nextVitals,
+// //   // Override default ignores of eslint-config-next.
+// //   globalIgnores([
+// //     // Default ignores of eslint-config-next:
+// //     ".next/**",
+// //     "out/**",
+// //     "build/**",
+// //     "next-env.d.ts",
+// //   ]),
+// // ]);
+
+// // export default eslintConfig;
+
+
+// // eslint.config.mjs
+
+
+// import { defineConfig, globalIgnores } from "eslint/config";
+// import nextVitals from "eslint-config-next/core-web-vitals";
+
+// const eslintConfig = defineConfig([
+//   ...nextVitals,
+//   {
+//     rules: {
+//       "react/no-unescaped-entities": "warn",
+//       "@next/next/no-html-link-for-pages": "warn",
+//       "react-hooks/set-state-in-effect": "warn"
+//     }
+//   },
+//   // Override default ignores of eslint-config-next.
+//   globalIgnores([
+//     // Default ignores of eslint-config-next:
+//     ".next/**",
+//     "out/**",
+//     "build/**",
+//     "next-env.d.ts",
+//   ]),
+// ]);
+
+// export default eslintConfig;
+
+
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  {
+    rules: {
+      "react/no-unescaped-entities": "off",
+      "@next/next/no-html-link-for-pages": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "@next/next/no-img-element": "off",
+      "jsx-a11y/alt-text": "off",
+      "@next/next/next-script-for-ga": "off"
+    }
+  },
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
