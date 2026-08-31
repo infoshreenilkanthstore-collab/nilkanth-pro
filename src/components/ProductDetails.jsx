@@ -19,10 +19,10 @@ import { getPositiveWeight } from "@/lib/checkout";
 
 
 
-export default function ProductDetails({ handle }) {
+export default function ProductDetails({ handle, initialProduct = null }) {
     const { toggleWishlist, isInWishlist } = useWishlist();
-    const [product, setProduct] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [product, setProduct] = useState(initialProduct);
+    const [loading, setLoading] = useState(!initialProduct);
     const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const { cart, addToCart, openMegaCheckout } = useCartSidebar();
@@ -30,7 +30,14 @@ export default function ProductDetails({ handle }) {
     const [selectedImage, setSelectedImage] = useState(0);
 
     // Review States
-    const [reviews, setReviews] = useState([]);
+    const [reviews, setReviews] = useState(() => {
+        if (!initialProduct) return [];
+        if (Array.isArray(initialProduct.reviews)) return initialProduct.reviews;
+        if (initialProduct.reviews?.value) {
+            try { return JSON.parse(initialProduct.reviews.value); } catch { return []; }
+        }
+        return [];
+    });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, comment: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,36 +140,6 @@ export default function ProductDetails({ handle }) {
 
             if (data.success && data.product) {
                 setProduct(data.product);
-
-                // Trigger Facebook Pixel ViewContent immediately when product data loads
-                if (typeof window !== "undefined") {
-                    const cleanProdId = String(data.product.id || "").replace(/^gid:\/\/shopify\/Product\//, "");
-                    const prodPrice = Number(data.product.priceRange?.minVariantPrice?.amount || data.product.price || 0);
-                    const vcPayload = {
-                        content_ids: [cleanProdId],
-                        content_name: data.product.title,
-                        content_type: 'product',
-                        value: prodPrice,
-                        currency: 'INR'
-                    };
-
-                    const fireFb = () => {
-                        if (typeof window.fbq === "function") {
-                            window.fbq('track', 'ViewContent', vcPayload);
-                            window.fbq('trackSingle', '1455730108844531', 'ViewContent', vcPayload);
-                            console.log('🎯 [Meta Pixel] Tracked ViewContent:', vcPayload);
-                            return true;
-                        }
-                        return false;
-                    };
-
-                    if (!fireFb()) {
-                        const t = setInterval(() => {
-                            if (fireFb()) clearInterval(t);
-                        }, 100);
-                        setTimeout(() => clearInterval(t), 2500);
-                    }
-                }
 
                 if (Array.isArray(data.product.reviews)) {
                     setReviews(data.product.reviews);
@@ -284,8 +261,11 @@ export default function ProductDetails({ handle }) {
         if (typeof window !== "undefined") {
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
-        fetchProduct();
-    }, [handle]);
+        // Only fetch if initialProduct is missing or handle has changed
+        if (!initialProduct || (initialProduct.handle !== handle && String(initialProduct.id) !== handle)) {
+            fetchProduct();
+        }
+    }, [handle, initialProduct]);
 
     useEffect(() => {
         if (product && product.id) {
@@ -295,11 +275,16 @@ export default function ProductDetails({ handle }) {
         }
     }, [product?.id]);
 
-    // Facebook Pixel ViewContent - fires on product page view and on product changes
+    // Meta Pixel (ViewContent) & Google Analytics 4 (view_item)
+    // Protected against duplicate fires from React StrictMode, remounts, and variant changes
+    const trackedProductIdRef = useRef(null);
     useEffect(() => {
         if (!product?.id) return;
 
         const prodId = String(product.id || "").replace(/^gid:\/\/shopify\/Product\//, "");
+        if (trackedProductIdRef.current === prodId) return; // Prevent duplicate firing
+        trackedProductIdRef.current = prodId;
+
         const prodName = product.title || product.name || "";
         const prodPrice = Number(
             selectedVariant?.price?.amount ||
@@ -317,10 +302,25 @@ export default function ProductDetails({ handle }) {
             currency: 'INR'
         };
 
+        // 1. GA4 view_item event
+        if (typeof window !== "undefined" && typeof window.gtag === "function") {
+            window.gtag('event', 'view_item', {
+                currency: 'INR',
+                value: prodPrice,
+                items: [{
+                    item_id: prodId,
+                    item_name: prodName,
+                    price: prodPrice,
+                    quantity: 1
+                }]
+            });
+            console.log('📊 [GA4] Tracked view_item:', prodName);
+        }
+
+        // 2. Meta Pixel ViewContent event
         const trackViewContent = () => {
             if (typeof window !== "undefined" && typeof window.fbq === "function") {
                 window.fbq('track', 'ViewContent', payload);
-                window.fbq('trackSingle', '1455730108844531', 'ViewContent', payload);
                 console.log('🎯 [Meta Pixel] ViewContent tracked:', payload);
                 return true;
             }
@@ -337,7 +337,7 @@ export default function ProductDetails({ handle }) {
                 clearTimeout(timeout);
             };
         }
-    }, [product?.id, handle]);
+    }, [product?.id]);
 
     useEffect(() => {
         if (product) {
