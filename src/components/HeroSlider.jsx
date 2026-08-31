@@ -17,26 +17,26 @@ const slides = [
         id: 1,
         title: "Welcome to Nilkanth Store",
         subtitle: "Experience the divine taste of authentic prasadam",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/spray_banner_resized_1.webp?v=1774084110",
-        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/78a2fa4a3f5850499b6276c98f251316.png",
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/59893f635a4c87e89cc36bb405925d12.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/e09abb7c51b83bdb3def02c8d659d423.png",
         color: "bg-orange-100",
-    },
-    {
-        id: 2,
-        title: "Pure & Traditional",
-        subtitle: "Prepared with utmost devotion and purity",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/pooja_samagri.webp?v=1774084110",
-        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/a75ef2b51a1a39f4812c8c6444e56585.png",
-        color: "bg-green-100",
-    },
-    {
-        id: 3,
-        title: "Delivered to Your Doorstep",
-        subtitle: "Freshness guaranteed in every bite",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/vastu-yantra.webp?v=1774084110",
-        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/59ada74baac42ac21d6353c7e5356c50.png",
-        color: "bg-yellow-100",
-    },
+    }
+    // {
+    //     id: 2,
+    //     title: "Pure & Traditional",
+    //     subtitle: "Prepared with utmost devotion and purity",
+    //     image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/pooja_samagri.webp?v=1774084110",
+    //     mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/a75ef2b51a1a39f4812c8c6444e56585.png",
+    //     color: "bg-green-100",
+    // },
+    // {
+    //     id: 3,
+    //     title: "Delivered to Your Doorstep",
+    //     subtitle: "Freshness guaranteed in every bite",
+    //     image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/vastu-yantra.webp?v=1774084110",
+    //     mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/59ada74baac42ac21d6353c7e5356c50.png",
+    //     color: "bg-yellow-100",
+    // },
     // {
     //     id: 4,
     //     title: "Delivered to Your Doorstep",
@@ -56,8 +56,8 @@ const slides = [
 ];
 
 export default function HeroSlider() {
-    const [currentSlide, setCurrentSlide] = useState(1);
-    const [isTransitioning, setIsTransitioning] = useState(true);
+    const [currentSlide, setCurrentSlide] = useState();
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     // Initial check and resize listener for mobile
