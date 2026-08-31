@@ -573,11 +573,6 @@ export default function ProductDetails({ handle, initialProduct = null }) {
                 {/* Right Side: Product Details */}
                 <div className="flex flex-col space-y-8">
                     <div className="space-y-4 mb-1">
-                        {product.vendor && (
-                            <div className="text-sm font-bold text-[#700b10] md:mb-2 mb-1">
-                                {product.vendor}
-                            </div>
-                        )}
                         <div className="flex justify-between items-start gap-4 mb-1 md:mb-4">
                             <h1 className="font-nunito text-xl md:text-3xl font-bold text-gray-900 leading-tight flex-grow">
                                 {product.title}

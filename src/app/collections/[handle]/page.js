@@ -17,12 +17,23 @@ export async function generateMetadata({ params }) {
             return {
                 title: `${body.data.collection.title} | Nilkanth Store`,
                 description: body.data.collection.description,
+                alternates: {
+                    canonical: `/collections/${handle}`,
+                },
+                openGraph: {
+                    title: `${body.data.collection.title} | Nilkanth Store`,
+                    description: body.data.collection.description,
+                    url: `/collections/${handle}`,
+                },
             };
         }
     } catch (e) { }
 
     return {
         title: 'Collection | Nilkanth Store',
+        alternates: {
+            canonical: `/collections/${handle}`,
+        },
     };
 }
 

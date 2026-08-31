@@ -30,6 +30,14 @@ export async function generateMetadata({ params }) {
     return {
         title: `${article.title} | Nilkanth Store`,
         description: article.seo?.description || article.excerpt,
+        alternates: {
+            canonical: `/blogs/${handle}`,
+        },
+        openGraph: {
+            title: `${article.title} | Nilkanth Store`,
+            description: article.seo?.description || article.excerpt,
+            url: `/blogs/${handle}`,
+        },
     };
 }
 

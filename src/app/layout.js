@@ -22,9 +22,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://store.nilkanthdham.in";
+
 export const metadata = {
-  title: "Nilkanth Store",
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "./",
+  },
+  title: {
+    default: "Nilkanth Store",
+    template: "%s | Nilkanth Store",
+  },
   description: "Discover traditional religious and spiritual products including Pooja Saman, Vastu items, Yantras, Murtis, Pital & Copper products, Perfume, Attar, Agarbatti, Dhoop, and more.",
+  openGraph: {
+    siteName: "Nilkanth Store",
+    type: "website",
+    locale: "en_IN",
+  },
 };
 
 export default function RootLayout({ children }) {
