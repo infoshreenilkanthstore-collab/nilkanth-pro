@@ -98,19 +98,19 @@ export default function RootLayout({ children }) {
           />
         </noscript>
 
-              <script type="text/javascript">
+   <script type="text/javascript">
 
-(function(c,l,a,r,i,t,y){
+      (function(c,l,a,r,i,t,y){
 
-c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
 
-t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
 
-y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 
-})(window, document, "clarity", "script", "yccwjvvf0n");
+      })(window, document, "clarity", "script", "yccwjvvf0n");
 
-</script>
+  </script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased pb-16 md:pb-0`}
