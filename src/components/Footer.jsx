@@ -131,7 +131,7 @@ export default function Footer() {
                         </Link>
 
                         <p className="text-[13px] md:text-[14px] leading-relaxed text-gray-200/90 font-nunito pt-1 pr-2">
-                            Nilkanth Store brings you authentic pooja samagri, brass & copper idols, pure attars, premium dhoop and sacred essentials crafted with pure devotion, high quality, and tradition.
+                            Nilkanth Store brings you authentic pooja samagri, pure attars, premium dhoop and agarbatti crafted with pure devotion, high quality, and tradition.
                         </p>
                     </div>
 

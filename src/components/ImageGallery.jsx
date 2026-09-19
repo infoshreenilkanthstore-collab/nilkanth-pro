@@ -4,6 +4,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import Image from "next/image";
+import Link from "next/link";
 
 // Import Swiper styles
 import "swiper/css";
@@ -12,41 +13,30 @@ import "swiper/css/pagination";
 
 const galleryImages = [
     {
-        url: "https://megaecomm.megascale.co.in/backend/media/16/general/93b679cffd053ef1b28e86d6c626612b.jpg",
-        title: "Perfume"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/f4b641a55ead8ffade89bc850e6d66e5.jpg",
+        title: "Perfume",
+        handle: "perfume"
     },
     {
-        url: "https://megaecomm.megascale.co.in/backend/media/16/general/f4b641a55ead8ffade89bc850e6d66e5.jpg",
-        title: "Attar"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/93b679cffd053ef1b28e86d6c626612b.jpg",
+        title: "Attar",
+        handle: "attar"
     },
     {
         url: "https://megaecomm.megascale.co.in/backend/media/16/general/38e699c1bf6d9dfba7ee855f7b65a573.jpg",
-        title: "Air-Freshner"
+        title: "Air Freshner",
+        handle: "air-freshner"
     },
     {
         url: "https://megaecomm.megascale.co.in/backend/media/16/general/740843aeb8641983440819b5b5a26dcb.jpg",
-        title: "Agarbatti"
+        title: "Agarbatti",
+        handle: "agarbatti"
     },
     {
         url: "https://megaecomm.megascale.co.in/backend/media/16/general/cf7f42c5e469be46c92fb75f61c30ac0.jpg",
-        title: "Dhoop Stick"
+        title: "Dhoop Stick",
+        handle: "dhoop"
     },
-    // {
-    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/aarati_dish_1_73a11d45-c152-41ab-898d-b18347e16841.webp?v=1774253908",
-    //     title: "Aarati Dish"
-    // },
-    // {
-    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/sceen_colour_nilkanth_varni_2_3b6a562a-ceda-473c-9d8e-181e31a476c0.webp?v=1774253908",
-    //     title: "Murtis"
-    // },
-    // {
-    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/prasad_vataki_1_2f820f8e-6fb3-47ca-89ce-ed9334a1006b.webp?v=1774253908",
-    //     title: "Thal Bowls"
-    // },
-    // {
-    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/singal_aarati_9_dc2a526e-3078-44f1-874e-7702c323731e.webp?v=1774253908",
-    //     title: "Aarati"
-    // }
 ];
 
 export default function ImageGallery() {
@@ -105,7 +95,10 @@ export default function ImageGallery() {
                     >
                         {galleryImages.map((image, index) => (
                             <SwiperSlide key={index}>
-                                <div className="relative group overflow-hidden rounded-xl aspect-[4/5] shadow-sm hover:shadow-2xl transition-all duration-700 bg-gray-50 border border-gray-100">
+                                <Link
+                                    href={`/collections/${image.handle || image.title.toLowerCase().replace(/\s+/g, '-')}`}
+                                    className="block relative group overflow-hidden rounded-xl aspect-[4/5] shadow-sm hover:shadow-2xl transition-all duration-700 bg-gray-50 border border-gray-100 cursor-pointer"
+                                >
                                     <Image
                                         src={image.url?.trim()}
                                         alt={image.title}
@@ -126,7 +119,7 @@ export default function ImageGallery() {
                                             {image.title}
                                         </p>
                                     </div>
-                                </div>
+                                </Link>
                             </SwiperSlide>
                         ))}
                     </Swiper>
