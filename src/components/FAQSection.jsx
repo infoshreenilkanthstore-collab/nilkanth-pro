@@ -59,7 +59,7 @@ export default function FAQSection() {
             <div className="aspect-square bg-gray-200">
               {/* User can replace this src with their actual image */}
               <img
-                src="https://cdn.shopify.com/s/files/1/0804/0867/4532/files/unnamed_16.jpg?v=1774250403"
+                src="https://megaecomm.megascale.co.in/backend/media/16/general/c18c1d4e0e4c4401b13d3c013ea57e99.jpg"
                 alt="FAQ Illustration"
                 className="w-full h-full object-cover transition-transform duration-700 "
               />

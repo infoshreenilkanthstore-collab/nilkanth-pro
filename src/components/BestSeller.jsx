@@ -74,20 +74,6 @@ export default function BestSeller({ sectionName = "Best Seller" }) {
                             <ProductCircle key={product.id} product={product} />
                         ))}
                     </div>
-
-                    {/* Center Video */}
-                    <div className="flex-shrink-0 flex justify-center order-1 lg:order-2 mb-2 lg:mb-0">
-                        <video
-                            src="https://cdn.shopify.com/videos/c/o/v/50c5cdff3e284c6194d0cc939cb8e8db.mp4"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            preload="auto"
-                            className="w-[170px]  lg:w-[240px] object-contain"
-                        />
-                    </div>
-
                     {/* Right Products */}
                     <div className="grid grid-cols-3 gap-2 sm:gap-6 lg:flex lg:items-center lg:gap-5 order-3 w-full lg:w-auto px-2 lg:px-0 justify-items-center">
                         {rightProducts.map((product) => (

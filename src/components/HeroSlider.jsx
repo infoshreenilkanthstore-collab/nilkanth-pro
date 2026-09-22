@@ -17,40 +17,40 @@ const slides = [
         id: 1,
         title: "Welcome to Nilkanth Store",
         subtitle: "Experience the divine taste of authentic prasadam",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/spray_banner_resized_1.webp?v=1774084110",
-        mobileImage: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/attar_spre_mobile_banner_c791e9e2-f27f-4a82-97e6-50a60a0db698.webp?v=1774084464", // Replace with mobile link
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/7c9009714fa69ec32c8f3d868d4839d9.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/6fc3ca2d0c8550725847027ecea9248c.jpg",
         color: "bg-orange-100",
     },
     {
         id: 2,
         title: "Pure & Traditional",
         subtitle: "Prepared with utmost devotion and purity",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/pooja_samagri.webp?v=1774084110",
-        mobileImage: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/4_3e157270-4769-4c1c-9abf-c5e926895661.webp?v=1774084464", // Replace with mobile link
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/f813da82769e89652e96d7f30c57055f.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/eac3845d6b740c1612bf3bfe42b0ce6b.jpg",
         color: "bg-green-100",
     },
     {
         id: 3,
         title: "Delivered to Your Doorstep",
         subtitle: "Freshness guaranteed in every bite",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/vastu-yantra.webp?v=1774084110",
-        mobileImage: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/2_1.webp?v=1774084465", // Replace with mobile link
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/31d6e538cf7843ec74e79c4d03b929c5.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/923611477721cbbf193099e0afd75a0e.jpg",
         color: "bg-yellow-100",
     },
     {
         id: 4,
         title: "Delivered to Your Doorstep",
         subtitle: "Freshness guaranteed in every bite",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/skin_care_hai_care.webp?v=1774084110",
-        mobileImage: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/3_26728af4-4378-444c-bf34-39c3f0a74cec.webp?v=1774084465", // Replace with mobile link
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/6dd627b927defb761c14ef4af67ac40c.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/13c4b56a3de857c76efb670d54371e22.jpg", // Replace with mobile link
         color: "bg-yellow-100",
     },
     {
         id: 5,
         title: "Delivered to Your Doorstep",
         subtitle: "Freshness guaranteed in every bite",
-        image: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/aushadhi_1.webp?v=1774084111",
-        mobileImage: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/1_1b1d2d72-b7c2-4125-ba9f-ed4eab210dfe.webp?v=1774084465", // Replace with mobile link
+        image: "https://megaecomm.megascale.co.in/backend/media/16/general/f6f4dc305092d252e44611e70299c73c.jpg",
+        mobileImage: "https://megaecomm.megascale.co.in/backend/media/16/general/ce8349a18499b55ffe57fee027fbeed1.jpg", // Replace with mobile link
         color: "bg-yellow-100",
     },
 ];

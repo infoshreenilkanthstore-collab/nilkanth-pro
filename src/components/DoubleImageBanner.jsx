@@ -8,7 +8,7 @@ export default function DoubleImageBanner({
     buttonText = "Shop Collection",
     buttonLink = "/collections",
     // Left side image (Pooja decoration/Samaagri)
-    mainImageUrl = "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/2e60e78829fb62d88e047443760b3bbc.webp?v=1774247435",
+    mainImageUrl = "https://megaecomm.megascale.co.in/backend/media/16/general/12d151b31b6dbb059e5aa9030416a962.jpg",
     // Background watermark/icon for the left side
     bgIconUrl = "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/2e60e78829fb62d88e047443760b3bbc.webp?v=1774247435"
 }) {

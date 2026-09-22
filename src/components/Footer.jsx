@@ -113,7 +113,7 @@ export default function Footer() {
                     {/* Column 1: Brand & Bio (3 cols) */}
                     <div className="lg:col-span-3 space-y-4 pb-4 lg:pb-0 border-b border-white/10 lg:border-none">
                         <Link href="/" className="inline-flex items-center gap-3 group">
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 p-1 border border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-white p-1 border border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
                                 <img
                                     src="https://megaecomm.megascale.co.in/backend/media/16/general/c2bf167e8984676b71498ccb3c299e14.png"
                                     alt="Nilkanth Store Logo"
@@ -122,7 +122,7 @@ export default function Footer() {
                             </div>
                             <div>
                                 <h3 className="font-serif text-2xl font-bold tracking-tight text-white leading-none">
-                                    nilkanth
+                                    Shree Nilkanth Store
                                 </h3>
                                 <span className="text-[10px] tracking-[0.25em] uppercase text-[#EBD99C] font-semibold block mt-0.5">
                                     Store & Pooja Samagri

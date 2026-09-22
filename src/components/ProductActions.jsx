@@ -9,10 +9,6 @@ import { useCartSidebar } from "@/context/CartSidebarContext";
 // --------------------
 export function AddToCart({ product, variant = null, qty = 1, isOutOfStock = false, price = null }) {
   const { cart, addToCart, updateQty, removeFromCart } = useCartSidebar();
-  console.log("*---------------------***************************")
-  console.log("variant", variant)
-  console.log("product", product)
-  console.log("*---------------------***************************")
   const variantId =
     variant?.id ||
     product?.variants?.edges?.[0]?.node?.id ||

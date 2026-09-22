@@ -3,7 +3,7 @@
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
-import Image from "next/image";         
+import Image from "next/image";
 
 // Import Swiper styles
 import "swiper/css";
@@ -12,41 +12,41 @@ import "swiper/css/pagination";
 
 const galleryImages = [
     {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/ocean_perfyum_2_50008dcb-8a09-44ab-9ad0-a5483bb42e32.webp?v=1774253909",
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/93b679cffd053ef1b28e86d6c626612b.jpg",
         title: "Perfume"
     },
     {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/karatal_16_e95b9ee9-97cd-4cec-80f9-5b848e104c64.webp?v=1774253909",
-        title: "Kadtal"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/f4b641a55ead8ffade89bc850e6d66e5.jpg",
+        title: "Attar"
     },
     {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/pital_lota_18_c6c71947-9ea9-495b-8140-20dd5c79f5bb.webp?v=1774253909",
-        title: "Pital Kalash"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/38e699c1bf6d9dfba7ee855f7b65a573.jpg",
+        title: "Air-Freshner"
     },
     {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/happy_men_2_f00197a2-81db-4c2e-96d7-6711991232c4.webp?v=1774253909",
-        title: "Laughing Budhha"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/740843aeb8641983440819b5b5a26dcb.jpg",
+        title: "Agarbatti"
     },
     {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/stone_3_565d46b1-805a-4d63-b3f6-7c65fb75f10a.webp?v=1774253909",
-        title: "Decorative Stone"
+        url: "https://megaecomm.megascale.co.in/backend/media/16/general/cf7f42c5e469be46c92fb75f61c30ac0.jpg",
+        title: "Dhoop Stick"
     },
-    {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/aarati_dish_1_73a11d45-c152-41ab-898d-b18347e16841.webp?v=1774253908",
-        title: "Aarati Dish"
-    },
-    {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/sceen_colour_nilkanth_varni_2_3b6a562a-ceda-473c-9d8e-181e31a476c0.webp?v=1774253908",
-        title: "Murtis"
-    },
-    {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/prasad_vataki_1_2f820f8e-6fb3-47ca-89ce-ed9334a1006b.webp?v=1774253908",
-        title: "Thal Bowls"
-    },
-    {
-        url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/singal_aarati_9_dc2a526e-3078-44f1-874e-7702c323731e.webp?v=1774253908",
-        title: "Aarati"
-    }
+    // {
+    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/aarati_dish_1_73a11d45-c152-41ab-898d-b18347e16841.webp?v=1774253908",
+    //     title: "Aarati Dish"
+    // },
+    // {
+    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/sceen_colour_nilkanth_varni_2_3b6a562a-ceda-473c-9d8e-181e31a476c0.webp?v=1774253908",
+    //     title: "Murtis"
+    // },
+    // {
+    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/prasad_vataki_1_2f820f8e-6fb3-47ca-89ce-ed9334a1006b.webp?v=1774253908",
+    //     title: "Thal Bowls"
+    // },
+    // {
+    //     url: "https://cdn.shopify.com/s/files/1/0804/0867/4532/files/singal_aarati_9_dc2a526e-3078-44f1-874e-7702c323731e.webp?v=1774253908",
+    //     title: "Aarati"
+    // }
 ];
 
 export default function ImageGallery() {
@@ -107,7 +107,7 @@ export default function ImageGallery() {
                             <SwiperSlide key={index}>
                                 <div className="relative group overflow-hidden rounded-xl aspect-[4/5] shadow-sm hover:shadow-2xl transition-all duration-700 bg-gray-50 border border-gray-100">
                                     <Image
-                                        src={image.url}
+                                        src={image.url?.trim()}
                                         alt={image.title}
                                         width={500}
                                         height={500}
