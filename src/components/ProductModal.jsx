@@ -40,23 +40,24 @@ export function ProductModal({ isOpen, onClose, product }) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !p) return null;
-
-  const images = p.images?.edges?.map(e => e.node) || [];
+  const images = p?.images?.edges?.map(e => e.node) || [];
   const totalImages = images.length;
 
-  const price = parseFloat(p.priceRange?.minVariantPrice?.amount || 0);
-  const compareAtPrice = parseFloat(p.compareAtPriceRange?.minVariantPrice?.amount || 0);
+  const price = parseFloat(p?.priceRange?.minVariantPrice?.amount || 0);
+  const compareAtPrice = parseFloat(p?.compareAtPriceRange?.minVariantPrice?.amount || 0);
   const discount = compareAtPrice > price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : 0;
 
-  const variants = p.variants?.edges?.map(e => e.node) || [];
+  const variants = p?.variants?.edges?.map(e => e.node) || [];
   // Determine selected variant's price based on selected options
   const matchedVariant = variants.find(v =>
     v.selectedOptions?.every(so => selectedOptions[so.name] === so.value)
   ) || variants[0];
 
+  const variantPrice = matchedVariant?.price?.amount ? parseFloat(matchedVariant.price.amount) : price;
+  const variantCompareAtPrice = matchedVariant?.compareAtPrice?.amount ? parseFloat(matchedVariant.compareAtPrice.amount) : compareAtPrice;
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !p) return;
     const activeVariantId = matchedVariant?.id || p?.variants?.edges?.[0]?.node?.id || p?.variants?.[0]?.id || p?.id;
     if (!activeVariantId) return;
     const currentCartItem = cart.find(i => i.variantId === activeVariantId);
@@ -66,10 +67,6 @@ export function ProductModal({ isOpen, onClose, product }) {
       setQty(1);
     }
   }, [isOpen, cart, matchedVariant?.id, p?.id]);
-
-  const variantPrice = matchedVariant?.price?.amount ? parseFloat(matchedVariant.price.amount) : price;
-  const variantCompareAtPrice = matchedVariant?.compareAtPrice?.amount ? parseFloat(matchedVariant.compareAtPrice.amount) : compareAtPrice;
-
 
   if (!mounted || !isOpen || !p) return null;
 
@@ -176,10 +173,10 @@ export function ProductModal({ isOpen, onClose, product }) {
                 <div className="flex items-center gap-3">
                   <div className="flex gap-0.5 text-[#700b10]">
                     {[1, 2, 3, 4, 5].map(s => (
-                      <Star 
-                        key={s} 
-                        size={16} 
-                        fill={avg >= s ? "currentColor" : "none"} 
+                      <Star
+                        key={s}
+                        size={16}
+                        fill={avg >= s ? "currentColor" : "none"}
                         className={avg >= s ? "" : avg >= s - 0.5 ? "opacity-50" : "text-gray-300"}
                       />
                     ))}
