@@ -46,6 +46,8 @@ export default function Header() {
         setIsPlaying(!isPlaying);
     };
 
+    const totalCartCount = cart?.reduce((sum, item) => sum + (Number(item.qty) || 1), 0) || 0;
+
     const handleopencart = () => {
         openCart();
     }
@@ -372,6 +374,11 @@ export default function Header() {
                                     aria-label="Cart"
                                 >
                                     <ShoppingCart className="w-4 h-4 md:w-4 md:h-4 lg:w-5 lg:h-5 cursor-pointer text-[#700b10]" />
+                                    {totalCartCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-[#700b10] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                                            {totalCartCount}
+                                        </span>
+                                    )}
                                 </button>
 
 
@@ -500,9 +507,9 @@ export default function Header() {
                     >
                         <div className="relative">
                             <ShoppingCart className="w-5 h-5" />
-                            {cart && cart.length > 0 && (
+                            {totalCartCount > 0 && (
                                 <span className="absolute -top-1.5 -right-2 bg-[#700b10] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                                    {cart.length}
+                                    {totalCartCount}
                                 </span>
                             )}
                         </div>

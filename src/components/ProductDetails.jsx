@@ -68,6 +68,7 @@ export default function ProductDetails({ handle, initialProduct = null }) {
         return () => clearInterval(interval);
     }, []);
     const [showSticky, setShowSticky] = useState(false);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     // Review Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -98,6 +99,18 @@ export default function ProductDetails({ handle, initialProduct = null }) {
             setSelectedVariantId(defaultVariant.id);
         }
     }, [product, selectedVariantId]);
+
+    // Sync quantity with cart item quantity when cart or selected variant changes
+    useEffect(() => {
+        const activeVariantId = selectedVariant?.id || product?.variants?.edges?.[0]?.node?.id || product?.variants?.[0]?.id || product?.id;
+        if (!activeVariantId) return;
+        const currentCartItem = cart.find(i => i.variantId === activeVariantId);
+        if (currentCartItem) {
+            setQuantity(Number(currentCartItem.qty) || 1);
+        } else {
+            setQuantity(1);
+        }
+    }, [cart, selectedVariant?.id, product?.id]);
 
 
     const scrollContainerRef = useRef(null);
@@ -849,54 +862,53 @@ export default function ProductDetails({ handle, initialProduct = null }) {
                         </div>
                     )}
 
-                    <div className="space-y-5 mb-1">
-                        {/* Hide qty selector when product is already in cart — cart sidebar controls handle it */}
-                        {(() => {
-                            const variantId = product?.variants?.edges?.[0]?.node?.id || product?.variants?.[0]?.id;
-                            const inCart = cart.some(i => i.variantId === variantId);
-                            return !inCart && (
-                                <div className="flex items-center gap-6">
+                    <div className="space-y-4 mb-1">
+                        <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6">
+                            <div className="flex items-center gap-4 sm:gap-6">
+                                <span className="font-semibold text-gray-700 text-sm sm:text-base">
+                                    Quantity
+                                </span>
 
-                                    <span className="font-semibold text-gray-700 text-sm sm:text-base">
-                                        Quantity
-                                    </span>
+                                <div className="flex items-center bg-white border border-gray-200 rounded-full overflow-hidden shadow-sm">
+                                    <button
+                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-lg font-bold text-gray-500 hover:text-[#700b10] hover:bg-gray-50 transition"
+                                    >
+                                        −
+                                    </button>
 
-                                    <div className="flex items-center bg-white border border-gray-200 rounded-full overflow-hidden shadow-sm">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={quantity}
+                                        onChange={(e) =>
+                                            setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                                        }
+                                        className="w-12 h-10 sm:w-16 sm:h-12 text-center font-semibold text-gray-800 bg-transparent focus:outline-none text-sm sm:text-base"
+                                    />
 
-                                        <button
-                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-12 h-12 flex items-center justify-center text-lg font-bold text-gray-500 hover:text-[#700b10] hover:bg-gray-50 transition"
-                                        >
-                                            −
-                                        </button>
-
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={quantity}
-                                            onChange={(e) =>
-                                                setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                                            }
-                                            className="w-16 h-12 text-center font-semibold text-gray-800 bg-transparent focus:outline-none"
-                                        />
-
-                                        <button
-                                            onClick={() => setQuantity(quantity + 1)}
-                                            className="w-12 h-12 flex items-center justify-center text-lg font-bold text-gray-500 hover:text-[#700b10] hover:bg-gray-50 transition"
-                                        >
-                                            +
-                                        </button>
-
-                                    </div>
-
+                                    <button
+                                        onClick={() => setQuantity(quantity + 1)}
+                                        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-lg font-bold text-gray-500 hover:text-[#700b10] hover:bg-gray-50 transition"
+                                    >
+                                        +
+                                    </button>
                                 </div>
-                            );
-                        })()}
+                            </div>
 
+                            {/* Wishlist Button for Mobile (on the side of Quantity) */}
+                            <button
+                                onClick={() => toggleWishlist(product, selectedVariant?.id)}
+                                className="sm:hidden p-2.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors transform active:scale-95 shadow-sm flex items-center justify-center"
+                                title="Add to Wishlist"
+                            >
+                                <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "fill-[#700b10] text-[#700b10]" : "text-gray-400"}`} />
+                            </button>
+                        </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4 pt-2 mb-0">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-1 mb-0">
                             <div className="flex-1">
-                                <AddToCart product={product} variant={selectedVariant} qty={quantity} isOutOfStock={isOutOfStock} price={Number(priceAmount)} />
+                                <AddToCart product={product} variant={selectedVariant} qty={quantity} isOutOfStock={isOutOfStock} price={Number(priceAmount)} showStepper={false} />
                             </div>
                             <div className="flex-1">
                                 <button
@@ -910,9 +922,10 @@ export default function ProductDetails({ handle, initialProduct = null }) {
                                     <span>{isOutOfStock ? 'OUT OF STOCK' : 'BUY IT NOW'}</span>
                                 </button>
                             </div>
+                            {/* Wishlist Button for Desktop */}
                             <button
                                 onClick={() => toggleWishlist(product, selectedVariant?.id)}
-                                className="p-3 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors transform active:scale-95 shadow-sm"
+                                className="hidden sm:flex p-3 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors transform active:scale-95 shadow-sm items-center justify-center"
                                 title="Add to Wishlist"
                             >
                                 <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "fill-[#700b10] text-[#700b10]" : "text-gray-400"}`} />
@@ -929,15 +942,28 @@ export default function ProductDetails({ handle, initialProduct = null }) {
                     {/* <div className="w-full h-px bg-gray-200"></div> */}
 
                     <div className="space-y-4">
-                        {/* Description Accordion (Always Open) */}
+                        {/* Description Section */}
                         <div className="border-b border-gray-100 pt-4">
                             <h3 className="text-xl font-nunito font-bold text-gray-900 mb-4 flex items-center justify-between">
                                 Description
                             </h3>
-                            <div
-                                className="prose md:text-sm text-xs md:prose-base prose-amber max-w-none text-gray-700 leading-relaxed font-nunito"
-                                dangerouslySetInnerHTML={{ __html: cleanHTML }}
-                            />
+                            <div className="relative">
+                                <div
+                                    className={`prose md:text-sm text-xs md:prose-base prose-amber max-w-none text-gray-700 leading-relaxed font-nunito transition-all duration-300 ${!isDescriptionExpanded ? 'max-h-[140px] overflow-hidden md:max-h-none md:overflow-visible' : ''
+                                        }`}
+                                    dangerouslySetInnerHTML={{ __html: cleanHTML }}
+                                />
+                                {!isDescriptionExpanded && (
+                                    <div className="md:hidden absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                className="md:hidden mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#700b10] hover:text-[#5a090d] transition-colors py-1 cursor-pointer"
+                            >
+                                <span>{isDescriptionExpanded ? "Read Less" : "Read More"}</span>
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDescriptionExpanded ? "rotate-180" : ""}`} />
+                            </button>
                         </div>
                         <div className="pt-2">
                             <img
@@ -1439,7 +1465,7 @@ export default function ProductDetails({ handle, initialProduct = null }) {
                             </button>
                         </div>
                         <div className="flex-grow sm:w-48">
-                            <AddToCart product={product} variant={selectedVariant} qty={quantity} />
+                            <AddToCart product={product} variant={selectedVariant} qty={quantity} isOutOfStock={isOutOfStock} price={Number(priceAmount)} showStepper={false} />
                         </div>
                     </div>
                 </div>

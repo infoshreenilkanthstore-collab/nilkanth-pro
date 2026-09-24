@@ -1,4 +1,5 @@
 "use client";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useCartSidebar } from "@/context/CartSidebarContext";
 import { X, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
@@ -14,6 +15,17 @@ export default function CartSidebar() {
     removeFromCart,
     openMegaCheckout
   } = useCartSidebar();
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const handleProceedToCheckout = (e) => {
   e.preventDefault();

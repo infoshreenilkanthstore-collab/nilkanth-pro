@@ -39,17 +39,17 @@ export default function ProductMarquee() {
             */}
             <div className="flex w-max animate-marquee">
                 {/* First set of products */}
-                <div className="flex justify-around min-w-full ">
+                <div className="flex items-center gap-8 md:gap-14 min-w-full pr-8 md:pr-14">
                     {displayProducts.map((product, index) => {
-                        const image = product.images.edges[0]?.node;
+                        const image = product.images?.edges?.[0]?.node;
                         return (
                             <Link
                                 key={`first-${product.id}-${index}`}
                                 href={`/products/${product.handle || product.id}`}
-                                className="flex items-center gap-3 transition-transform duration-300 flex-shrink-0"
+                                className="flex items-center gap-3 transition-transform duration-300 flex-shrink-0 hover:opacity-80"
                             >
                                 {image && (
-                                    <div className="md:w-10 w-6 md:h-10 h-6 rounded-sm overflow-hidden shadow-sm flex-shrink-0 bg-white">
+                                    <div className="md:w-10 w-6 md:h-10 h-6 rounded-sm overflow-hidden shadow-sm flex-shrink-0 bg-white border border-gray-100">
                                         <img
                                             src={image.url}
                                             alt={image.altText || product.title}
@@ -58,24 +58,24 @@ export default function ProductMarquee() {
                                     </div>
                                 )}
                                 <span className="text-[#700b10] font-bold font-nunito whitespace-nowrap md:text-lg text-sm">
-                                    {product.title.split(' | ')[0]}
+                                    {product.title?.split(' | ')[0]}
                                 </span>
                             </Link>
                         );
                     })}
                 </div>
                 {/* Duplicate set for seamless scrolling */}
-                <div className="flex justify-around min-w-full">
+                <div className="flex items-center gap-8 md:gap-14 min-w-full pr-8 md:pr-14">
                     {displayProducts.map((product, index) => {
-                        const image = product.images.edges[0]?.node;
+                        const image = product.images?.edges?.[0]?.node;
                         return (
                             <Link
                                 key={`second-${product.id}-${index}`}
                                 href={`/products/${product.handle || product.id}`}
-                                className="flex items-center gap-3 transition-transform duration-300 flex-shrink-0"
+                                className="flex items-center gap-3 transition-transform duration-300 flex-shrink-0 hover:opacity-80"
                             >
                                 {image && (
-                                    <div className="md:w-10 w-6 md:h-10 h-6 rounded-sm overflow-hidden shadow-sm flex-shrink-0 bg-white">
+                                    <div className="md:w-10 w-6 md:h-10 h-6 rounded-sm overflow-hidden shadow-sm flex-shrink-0 bg-white border border-gray-100">
                                         <img
                                             src={image.url}
                                             alt={image.altText || product.title}
@@ -84,7 +84,7 @@ export default function ProductMarquee() {
                                     </div>
                                 )}
                                 <span className="text-[#700b10] font-bold font-nunito whitespace-nowrap md:text-lg text-sm">
-                                    {product.title.split(' | ')[0]}
+                                    {product.title?.split(' | ')[0]}
                                 </span>
                             </Link>
                         );
@@ -97,7 +97,7 @@ export default function ProductMarquee() {
             */}
             <style jsx>{`
                 .animate-marquee {
-                  animation: marquee 55s linear infinite;
+                  animation: marquee 280s linear infinite;
                 }
                 .animate-marquee:hover {
                   animation-play-state: paused;

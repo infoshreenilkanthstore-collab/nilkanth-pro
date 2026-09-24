@@ -7,7 +7,7 @@ import { useCartSidebar } from "@/context/CartSidebarContext";
 // --------------------
 // ADD TO CART
 // --------------------
-export function AddToCart({ product, variant = null, qty = 1, isOutOfStock = false, price = null }) {
+export function AddToCart({ product, variant = null, qty = 1, isOutOfStock = false, price = null, showStepper = true }) {
   const { cart, addToCart, updateQty, removeFromCart } = useCartSidebar();
   const variantId =
     variant?.id ||
@@ -80,7 +80,7 @@ export function AddToCart({ product, variant = null, qty = 1, isOutOfStock = fal
     );
   }
 
-  if (inCart) {
+  if (inCart && showStepper) {
     return (
       <div
         className="w-full flex items-center justify-between gap-1 px-3 md:py-1.5 py-1 rounded-full bg-[#5e0404] text-white font-bold"

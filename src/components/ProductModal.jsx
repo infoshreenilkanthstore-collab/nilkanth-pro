@@ -6,10 +6,12 @@ import { X, ChevronLeft, ChevronRight, ShoppingCart, Truck, Star, Heart, Share2 
 import Link from "next/link";
 import { AddToCart } from "@/components/ProductActions";
 import { useWishlist } from "@/context/WishlistContext";
+import { useCartSidebar } from "@/context/CartSidebarContext";
 import ShareModal from "./ShareModal";
 
 export function ProductModal({ isOpen, onClose, product }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { cart } = useCartSidebar();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [qty, setQty] = useState(1);
@@ -23,7 +25,6 @@ export function ProductModal({ isOpen, onClose, product }) {
   useEffect(() => {
     if (isOpen) {
       setCurrentImageIndex(0);
-      setQty(1);
       // Pre-select first value for each option
       if (p?.options) {
         const defaults = {};
@@ -54,9 +55,17 @@ export function ProductModal({ isOpen, onClose, product }) {
     v.selectedOptions?.every(so => selectedOptions[so.name] === so.value)
   ) || variants[0];
 
-
-
-
+  useEffect(() => {
+    if (!isOpen) return;
+    const activeVariantId = matchedVariant?.id || p?.variants?.edges?.[0]?.node?.id || p?.variants?.[0]?.id || p?.id;
+    if (!activeVariantId) return;
+    const currentCartItem = cart.find(i => i.variantId === activeVariantId);
+    if (currentCartItem) {
+      setQty(Number(currentCartItem.qty) || 1);
+    } else {
+      setQty(1);
+    }
+  }, [isOpen, cart, matchedVariant?.id, p?.id]);
 
   const variantPrice = matchedVariant?.price?.amount ? parseFloat(matchedVariant.price.amount) : price;
   const variantCompareAtPrice = matchedVariant?.compareAtPrice?.amount ? parseFloat(matchedVariant.compareAtPrice.amount) : compareAtPrice;
@@ -257,7 +266,7 @@ export function ProductModal({ isOpen, onClose, product }) {
 
           {/* Add to Cart Button */}
           <div className="flex-1">
-            <AddToCart product={p} variant={matchedVariant} qty={qty} />
+            <AddToCart product={p} variant={matchedVariant} qty={qty} showStepper={false} />
           </div>
 
 

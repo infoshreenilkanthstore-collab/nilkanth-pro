@@ -189,7 +189,7 @@ export default function ProductCard({ product }) {
                         </div>
                         {compareAtPrice > price && (
                             <div className="mt-1">
-                                <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full inline-block">
+                                <span className="bg-[#E8B900] text-black text-[10px] font-black px-2 py-0.5 inline-block">
                                     {discount}% OFF
                                 </span>
                             </div>
@@ -202,17 +202,9 @@ export default function ProductCard({ product }) {
                     </div>
 
                     <div className="flex gap-2 mt-auto items-center">
-                        <div className="md:w-[80%] w-[75%]">
+                        <div className="md:w-[100%] w-[100%]">
                             <AddToCart product={p} variant={activeVariant} isOutOfStock={isOutOfStock} price={price} />
                         </div>
-
-                        {/* Eye button triggers modal */}
-                        <button
-                            className="w-[20%] py-2 md:py-1 flex items-center justify-center border rounded-full text-black hover:bg-gray-100 transition"
-                            onClick={() => setIsOpen(true)}
-                        >
-                            <FiEye className="h-3 w-3 md:h-5 md:w-5" />
-                        </button>
                     </div>
                 </div>
             </div>

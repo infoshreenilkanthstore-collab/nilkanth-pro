@@ -14,6 +14,17 @@ export default function WishlistSidebar() {
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isOpen]);
+
     if (!mounted) return null;
 
     return (
