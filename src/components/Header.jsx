@@ -106,6 +106,14 @@ export default function Header({
                 Track Order
               </a> */}
               <a
+                href="https://megaship.megascale.co.in/track-orders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-nunito text-[14px] 2xl:text-[15px] transition-colors py-2 whitespace-nowrap cursor-pointer text-stone-700 hover:text-[#700b10]"
+              >
+                Track Order
+              </a>
+              <a
                 href="/about"
                 onClick={(e) => handleNav(e, "about")}
                 className={`font-nunito text-[14px] 2xl:text-[15px] transition-colors py-2 whitespace-nowrap cursor-pointer ${activePage === "about"
