@@ -95,7 +95,7 @@ export default function Header({
           {/* Desktop Right Navigation + Quick Action Buttons */}
           <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:gap-5 justify-end">
             <nav className="hidden xl:flex items-center gap-5 2xl:gap-8">
-              <a
+              {/* <a
                 href="https://megaship.megascale.co.in/track-orders"
                 onClick={(e) => handleNav(e, "about")}
                 className={`font-nunito text-[14px] 2xl:text-[15px] transition-colors py-2 whitespace-nowrap cursor-pointer ${activePage === "about"
@@ -104,7 +104,7 @@ export default function Header({
                   }`}
               >
                 Track Order
-              </a>
+              </a> */}
               <a
                 href="/about"
                 onClick={(e) => handleNav(e, "about")}
