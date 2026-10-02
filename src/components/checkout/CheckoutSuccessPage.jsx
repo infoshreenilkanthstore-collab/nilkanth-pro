@@ -1,14 +1,27 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle2, Package, Truck, ShieldCheck, ArrowRight, MessageCircle, Download } from "lucide-react";
 import { trackPurchase } from "../../services/analytics";
 
-export default function CheckoutSuccessPage({ orderData, onNavigate }) {
+export default function CheckoutSuccessPage({ orderData: propOrderData, onNavigate }) {
+  const [orderData, setOrderData] = useState(() => {
+    if (propOrderData) return propOrderData;
+    try {
+      const saved = sessionStorage.getItem("nilkanth_last_placed_order");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (orderData) {
+    if (propOrderData) {
+      setOrderData(propOrderData);
+      trackPurchase(propOrderData);
+    } else if (orderData) {
       trackPurchase(orderData);
     }
-  }, [orderData]);
+  }, [propOrderData]);
 
   const orderNumber = orderData?.order_number || orderData?.id || "ORD-" + Math.floor(100000 + Math.random() * 900000);
   const items = orderData?.items || [];

@@ -22,11 +22,26 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
         const savedSession = sessionStorage.getItem("nilkanth_pending_checkout");
         const pendingData = savedSession ? JSON.parse(savedSession) : {};
 
+        let orderId = Number(getParam("order_id") || pendingData.order_id || pendingData.id || 0);
+        let paymentId = Number(getParam("payment_id") || pendingData.payment_id || 0);
+        const txnid = getParam("txnid") || pendingData.txnid || "";
+
+        // Extract order_id & payment_id from txnid if missing (format: TXN_31271_371_timestamp)
+        if (txnid && txnid.startsWith("TXN_")) {
+          const parts = txnid.split("_");
+          if (!orderId && parts.length >= 2 && !isNaN(parts[1])) {
+            orderId = Number(parts[1]);
+          }
+          if (!paymentId && parts.length >= 3 && !isNaN(parts[2])) {
+            paymentId = Number(parts[2]);
+          }
+        }
+
         if (provider === "icici") {
           payload = {
             provider: "icici",
-            order_id: Number(getParam("order_id") || pendingData.order_id || pendingData.id || 0),
-            payment_id: Number(getParam("payment_id") || pendingData.payment_id || 0),
+            order_id: orderId,
+            payment_id: paymentId,
             "Response Code": getParam("Response Code") || getParam("response_code") || "E000",
             "Unique Ref Number": getParam("Unique Ref Number") || getParam("unique_ref_number") || getParam("reference_no") || "",
             ReferenceNo: getParam("ReferenceNo") || getParam("reference_no") || "",
@@ -49,15 +64,15 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
 
           payload = {
             provider: "easebuzz",
-            order_id: Number(getParam("order_id") || pendingData.order_id || pendingData.id || 0),
-            payment_id: Number(getParam("payment_id") || pendingData.payment_id || 0),
+            order_id: orderId,
+            payment_id: paymentId,
             status: getParam("status") || "success",
-            txnid: getParam("txnid") || pendingData.txnid || "",
+            txnid: txnid,
             amount: getParam("amount") || (pendingData.total ? String(Number(pendingData.total).toFixed(2)) : ""),
             firstname: getParam("firstname") || pendingData.customer?.firstName || pendingData.customer?.name?.split(" ")[0] || "Customer",
             email: getParam("email") || pendingData.customer?.email || "",
             phone: getParam("phone") || pendingData.customer?.phone || "",
-            productinfo: getParam("productinfo") || pendingData.productinfo || (pendingData.order_id ? `Order CHK-${pendingData.order_id}` : "Order"),
+            productinfo: getParam("productinfo") || pendingData.productinfo || (orderId ? `Order CHK-${orderId}` : "Order"),
             hash: getParam("hash") || "",
             easepayid: getParam("easepayid") || "",
             error_Message: getParam("error_Message") || "",
@@ -71,18 +86,22 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
         if (res.success) {
           const abandonedId = Number(payload.order_id || pendingData.order_id || pendingData.id || 0);
           const items = pendingData.items || [];
-          const customer = pendingData.customer || {};
+          const customer = pendingData.customer || {
+            name: payload.firstname || "Devoted Customer",
+            email: payload.email || "",
+            phone: payload.phone || "",
+          };
           const shippingAddress = pendingData.shipping_address || {};
           const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
           // Phase 3: Convert Abandoned Draft to Official Placed Order (POST /checkout/sync)
           const syncPayload = {
             customer_id: null,
-            first_name: customer.name?.split(" ")[0] || "",
-            last_name: customer.name?.split(" ").slice(1).join(" ") || "",
-            customerName: customer.name || "Devoted Customer",
-            customerPhone: customer.phone || "",
-            customerEmail: customer.email || "",
+            first_name: customer.firstName || customer.name?.split(" ")[0] || "Customer",
+            last_name: customer.lastName || customer.name?.split(" ").slice(1).join(" ") || "",
+            customerName: customer.name || `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Devoted Customer",
+            customerPhone: customer.phone || payload.phone || "",
+            customerEmail: customer.email || payload.email || "",
             abandoned_checkout_id: abandonedId || null,
             items: items.map((it) => ({
               productId: Number(it.product_id || it.productId || it.id || 0),
@@ -99,21 +118,21 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
               state: shippingAddress.state || "",
               pincode: shippingAddress.pincode || "",
               country: shippingAddress.country || "India",
-              phone: customer.phone || "",
-              email: customer.email || "",
+              phone: customer.phone || payload.phone || "",
+              email: customer.email || payload.email || "",
             },
-            subtotal: Number(pendingData.total || 0),
+            subtotal: Number(pendingData.total || payload.amount || 0),
             discountAmount: Number(pendingData.discountAmount || 0),
             discountCode: pendingData.discountCode || "",
             shippingAmount: Number(pendingData.shippingAmount || 0),
             shippingMethod: pendingData.shippingMethod || "Standard Shipping",
             taxAmount: Number(pendingData.taxAmount || 0),
-            total: Number(pendingData.total || 0),
+            total: Number(pendingData.total || payload.amount || 0),
             currency: "INR",
             paymentMethod: "online",
             paymentProvider: provider,
             paymentStatus: "paid",
-            transactionReference: payload["Unique Ref Number"] || payload.txnid || "",
+            transactionReference: payload["Unique Ref Number"] || payload.txnid || payload.easepayid || "",
             device_type: isMobile ? "mobile" : "desktop",
             is_mobile: isMobile,
           };
@@ -122,7 +141,7 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
           const officialOrderData = syncRes?.data || {
             id: abandonedId,
             order_number: `ORD-${abandonedId}`,
-            total: pendingData.total,
+            total: pendingData.total || payload.amount,
             financial_status: "paid",
           };
 
@@ -139,11 +158,14 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
             customer,
             shipping_address: shippingAddress,
             items,
-            total: Number(officialOrderData.total || pendingData.total || 0),
+            total: Number(officialOrderData.total || pendingData.total || payload.amount || 0),
             provider,
             payment_method: "online",
             financial_status: "paid",
           };
+
+          // Persist confirmed order in session
+          sessionStorage.setItem("nilkanth_last_placed_order", JSON.stringify(confirmedOrder));
 
           trackPurchase(confirmedOrder);
           setStatus("success");
@@ -152,6 +174,15 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
           if (onPaymentVerified) {
             onPaymentVerified(confirmedOrder);
           }
+
+          // Automatically transition to Success Page
+          const timer = setTimeout(() => {
+            if (onNavigate) {
+              onNavigate("checkout-success", { orderData: confirmedOrder });
+            }
+          }, 1000);
+
+          return () => clearTimeout(timer);
         } else {
           setStatus("failed");
           setErrorMessage(res.message || "Gateway signature or status verification failed");

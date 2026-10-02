@@ -644,7 +644,7 @@ export default function CheckoutPage({
       const initRes = await initiatePayment({
         order_id: orderId,
         provider: selectedProvider,
-        return_url: `${window.location.origin}/checkout/callback/${selectedProvider}`,
+        return_url: `${window.location.origin}/api/checkout/callback/${selectedProvider}`,
         customer: customerPayload,
         amount: grandTotal,
         productinfo: productInfoStr,

@@ -1449,7 +1449,7 @@ export async function initiatePayment({
     const formattedAmount = amount !== undefined ? Number(Number(amount).toFixed(2)) : undefined;
     const cleanProductInfo = String(productinfo || `Order #${order_id}`).replace(/[^a-zA-Z0-9, -]/g, "").slice(0, 95) || "Order";
     const defaultReturnUrl =
-      return_url || `${typeof window !== "undefined" ? window.location.origin : ""}/checkout/callback/${provider}`;
+      return_url || `${typeof window !== "undefined" ? window.location.origin : ""}/api/checkout/callback/${provider}`;
     const payload = {
       order_id: Number(order_id),
       provider: String(provider).toLowerCase(),
