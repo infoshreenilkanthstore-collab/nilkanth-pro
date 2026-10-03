@@ -272,7 +272,7 @@ export default function Footer({ onNavigate }) {
               <div className="flex items-center gap-3">
                 {/* Facebook */}
                 <a
-                  href="https://www.facebook.com/NilkanthStore/"
+                  href="https://www.facebook.com/profile.php?id=61579659694888"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-[#831e24] hover:bg-[#ebd99c] text-white hover:text-[#700b10] flex items-center justify-center transition-all duration-200 shadow-xs hover:scale-105"
@@ -285,7 +285,7 @@ export default function Footer({ onNavigate }) {
 
                 {/* Instagram */}
                 <a
-                  href="https://www.instagram.com/nilkanthstore/"
+                  href="https://www.instagram.com/shrinilkanthstore//"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-[#831e24] hover:bg-[#ebd99c] text-white hover:text-[#700b10] flex items-center justify-center transition-all duration-200 shadow-xs hover:scale-105"
@@ -313,7 +313,7 @@ export default function Footer({ onNavigate }) {
 
                 {/* YouTube */}
                 <a
-                  href="https://www.youtube.com/@nilkanthstore"
+                  href="https://www.youtube.com/@ShreeNilkanthStore"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-[#831e24] hover:bg-[#ebd99c] text-white hover:text-[#700b10] flex items-center justify-center transition-all duration-200 shadow-xs hover:scale-105"
