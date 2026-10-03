@@ -395,8 +395,8 @@ export default function CheckoutPage({
       total: Number(grandTotal.toFixed(2)),
       currency: "INR",
       stage,
-      device_type: isMobile ? "desktop" : "desktop",
-      is_mobile: isMobile,
+      device_type: "desktop",
+      is_mobile: false,
     };
 
     try {
@@ -560,8 +560,8 @@ export default function CheckoutPage({
       paymentProvider: paymentProvider,
       paymentStatus: paymentStatus,
       transactionReference: transactionReference || "",
-      device_type: typeof window !== "undefined" && window.innerWidth < 768 ? "desktop" : "desktop",
-      is_mobile: typeof window !== "undefined" && window.innerWidth < 768,
+      device_type: "desktop",
+      is_mobile: false,
     };
 
     // 1. Phase 3: Convert Abandoned Draft to Official Placed Order (POST /checkout/sync)

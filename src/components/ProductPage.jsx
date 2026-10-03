@@ -283,16 +283,25 @@ export default function ProductPage({
   }, [product, selectedVariant]);
 
   // Calculations
-  const currentPrice =
-    selectedVariant?.price?.amount ||
-    product?.priceRange?.minVariantPrice?.amount ||
-    product?.price ||
-    0;
-  const currentComparePrice =
-    selectedVariant?.compareAtPrice?.amount ||
-    product?.compareAtPrice?.amount ||
-    product?.compare_at_price ||
-    0;
+  const currentPrice = Number(
+    selectedVariant?.price?.amount ??
+    selectedVariant?.price ??
+    product?.priceRange?.minVariantPrice?.amount ??
+    product?.price ??
+    0
+  );
+  const currentComparePrice = Number(
+    selectedVariant?.compareAtPrice?.amount ??
+    selectedVariant?.compare_at_price ??
+    selectedVariant?.compareAtPrice ??
+    product?.compareAtPrice?.amount ??
+    product?.compare_at_price ??
+    product?.compareAtPrice ??
+    product?.variants?.[0]?.compareAtPrice?.amount ??
+    product?.variants?.[0]?.compare_at_price ??
+    product?.variants?.[0]?.compareAtPrice ??
+    0
+  );
   const discountPercent =
     currentComparePrice > currentPrice
       ? Math.round(
@@ -710,9 +719,56 @@ export default function ProductPage({
                 <div>
                   <div className="relative">
                     <div
+                      onClick={(e) => {
+                        const link = e.target.closest("a");
+                        if (!link) return;
+                        const href = link.getAttribute("href") || "";
+                        if (!href || href === "#") return;
+
+                        const isExternal =
+                          (href.startsWith("http://") || href.startsWith("https://")) &&
+                          !href.includes(window.location.host) &&
+                          !href.includes("store.nilkanthdham.in") &&
+                          !href.includes("nilkanthdham.in");
+
+                        if (isExternal) {
+                          link.setAttribute("target", "_blank");
+                          link.setAttribute("rel", "noopener noreferrer");
+                          return;
+                        }
+
+                        e.preventDefault();
+                        const productMatch = href.match(/\/products\/([^/?#]+)/i);
+                        if (productMatch && productMatch[1]) {
+                          const pHandle = decodeURIComponent(productMatch[1]);
+                          if (onSelectProduct) onSelectProduct(pHandle);
+                          else onNavigate?.("product", { productHandle: pHandle });
+                          return;
+                        }
+
+                        const collectionMatch = href.match(/\/collections\/([^/?#]+)/i);
+                        if (collectionMatch && collectionMatch[1]) {
+                          onNavigate?.("collections", { collectionHandle: decodeURIComponent(collectionMatch[1]) });
+                          return;
+                        } else if (href.includes("/collections")) {
+                          onNavigate?.("collections");
+                          return;
+                        }
+
+                        if (href.includes("/shop")) onNavigate?.("shop");
+                        else if (href.includes("/blogs")) onNavigate?.("blogs");
+                        else if (href.includes("/contact")) onNavigate?.("contact");
+                        else if (href.includes("/about")) onNavigate?.("about");
+                        else onNavigate?.("home");
+                      }}
                       className={`text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans prose prose-stone max-w-none transition-all duration-300 ${!isDescriptionExpanded ? "line-clamp-6 max-h-[145px] overflow-hidden" : ""
                         }`}
-                      dangerouslySetInnerHTML={{ __html: product.description }}
+                      dangerouslySetInnerHTML={{
+                        __html: (product.description || "")
+                          .replace(/https?:\/\/store\.nilkanthdham\.in/gi, "")
+                          .replace(/https?:\/\/nilkanthdham\.in\/store/gi, "")
+                          .replace(/https?:\/\/nilkanthstore\.in/gi, ""),
+                      }}
                     />
                     {!isDescriptionExpanded && (
                       <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />

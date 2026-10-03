@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Calendar,
   Clock,
@@ -90,22 +90,94 @@ export default function BlogPostDetailPage({
     return `${Math.max(2, minutes || 3)} min read`;
   };
 
-  // Intercept links inside rendered HTML if they lead to store products
+  // Normalize HTML content from store.nilkanthdham.in to local relative routes
+  const sanitizedContent = useMemo(() => {
+    if (!post?.content) return post?.excerpt ? `<p>${post.excerpt}</p>` : "";
+    return post.content
+      .replace(/https?:\/\/store\.nilkanthdham\.in/gi, "")
+      .replace(/https?:\/\/nilkanthdham\.in\/store/gi, "")
+      .replace(/https?:\/\/nilkanthstore\.in/gi, "");
+  }, [post?.content, post?.excerpt]);
+
+  // Intercept links inside rendered HTML for smooth in-app SPA navigation
   const handleContentClick = (e) => {
     const link = e.target.closest("a");
     if (!link) return;
 
     const href = link.getAttribute("href") || "";
-    // If it's a link to products on store.nilkanthdham.in or relative /products/...
+    if (!href || href === "#") return;
+
+    const isExternal =
+      (href.startsWith("http://") || href.startsWith("https://")) &&
+      !href.includes(window.location.host) &&
+      !href.includes("store.nilkanthdham.in") &&
+      !href.includes("nilkanthdham.in");
+
+    if (isExternal) {
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+      return;
+    }
+
+    e.preventDefault();
+
+    // 1. Product Match: /products/:handle
     const productMatch = href.match(/\/products\/([^/?#]+)/i);
     if (productMatch && productMatch[1]) {
-      e.preventDefault();
       const productHandle = decodeURIComponent(productMatch[1]);
       if (onSelectProduct) {
         onSelectProduct(productHandle);
       } else if (onNavigate) {
         onNavigate("product", { productHandle });
       }
+      return;
+    }
+
+    // 2. Collection Match: /collections/:handle or /collections
+    const collectionMatch = href.match(/\/collections\/([^/?#]+)/i);
+    if (collectionMatch && collectionMatch[1]) {
+      const collectionHandle = decodeURIComponent(collectionMatch[1]);
+      onNavigate?.("collections", { collectionHandle });
+      return;
+    } else if (href.includes("/collections")) {
+      onNavigate?.("collections");
+      return;
+    }
+
+    // 3. Blog Post Match: /blogs/:category/:handle or /blogs/:handle or /blog/:handle
+    const blogMatch = href.match(/\/blogs?\/(?:news\/)?([^/?#]+)/i);
+    if (blogMatch && blogMatch[1] && blogMatch[1] !== "news") {
+      const pHandle = decodeURIComponent(blogMatch[1]);
+      if (onSelectPost) {
+        onSelectPost(pHandle);
+      } else {
+        onNavigate?.("blog-post", { postHandle: pHandle });
+      }
+      return;
+    } else if (href.includes("/blogs") || href.includes("/blog")) {
+      onNavigate?.("blogs");
+      return;
+    }
+
+    // 4. Shop and Static Pages
+    if (href.includes("/shop")) {
+      onNavigate?.("shop");
+    } else if (href.includes("/about")) {
+      onNavigate?.("about");
+    } else if (href.includes("/contact")) {
+      onNavigate?.("contact");
+    } else if (href.includes("/faq")) {
+      onNavigate?.("faq");
+    } else if (href.includes("/shipping")) {
+      onNavigate?.("shipping-policy");
+    } else if (href.includes("/return") || href.includes("/refund")) {
+      onNavigate?.("return-policy");
+    } else if (href.includes("/privacy")) {
+      onNavigate?.("privacy-policy");
+    } else if (href.includes("/terms")) {
+      onNavigate?.("terms");
+    } else {
+      onNavigate?.("home");
     }
   };
 
@@ -265,7 +337,7 @@ export default function BlogPostDetailPage({
               prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-li:text-stone-700 prose-li:text-sm sm:prose-li:text-base prose-li:mb-2
               prose-hr:border-stone-200 prose-hr:my-8"
             dangerouslySetInnerHTML={{
-              __html: post.content || `<p>${post.excerpt}</p>`,
+              __html: sanitizedContent,
             }}
           />
 

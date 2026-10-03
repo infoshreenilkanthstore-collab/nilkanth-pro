@@ -375,8 +375,10 @@ export default function App() {
   // Handler when any product is clicked anywhere across the app
   const handleProductSelect = (prod) => {
     if (!prod) return;
-    const handle = prod.handle || prod.id;
-    handleNavigate("product", { productHandle: handle });
+    const handle = typeof prod === "string" ? prod : (prod.handle || prod.id);
+    if (handle) {
+      handleNavigate("product", { productHandle: handle });
+    }
   };
 
   return (

@@ -1139,8 +1139,22 @@ export default function ProfilePage({
                         product.image_url ||
                         product.images?.[0]?.url ||
                         "https://megaecomm.megascale.co.in/backend/media/16/general/66066c8ca3ab4a8cc35413b3a26e3314.jpeg";
-                      const price = product.priceRange?.minVariantPrice?.amount || product.price || 0;
-                      const compareAtPrice = product.compareAtPrice?.amount || product.compare_at_price || 0;
+                      const price = Number(
+                        product.priceRange?.minVariantPrice?.amount ??
+                        product.price ??
+                        product.variants?.[0]?.price?.amount ??
+                        product.variants?.[0]?.price ??
+                        0
+                      );
+                      const compareAtPrice = Number(
+                        product.compareAtPrice?.amount ??
+                        product.compare_at_price ??
+                        product.compareAtPrice ??
+                        product.variants?.[0]?.compareAtPrice?.amount ??
+                        product.variants?.[0]?.compare_at_price ??
+                        product.variants?.[0]?.compareAtPrice ??
+                        0
+                      );
                       const itemId = item.id || item.product_id || product.id;
 
                       return (

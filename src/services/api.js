@@ -1306,10 +1306,16 @@ export async function syncAbandonedCheckout(payload) {
       h["Authorization"] = `Bearer ${customerToken}`;
     }
 
+    const checkoutPayload = {
+      ...payload,
+      device_type: "desktop",
+      is_mobile: false,
+    };
+
     const res = await fetch(`${API_BASE}/checkout/abandoned/sync`, {
       method: "POST",
       headers: h,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(checkoutPayload),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -1572,10 +1578,16 @@ export async function syncFinalOrder(payload) {
       h["Authorization"] = `Bearer ${customerToken}`;
     }
 
+    const orderPayload = {
+      ...payload,
+      device_type: "desktop",
+      is_mobile: false,
+    };
+
     const res = await fetch(`${API_BASE}/checkout/sync`, {
       method: "POST",
       headers: h,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(orderPayload),
     });
 
     const data = await res.json().catch(() => ({}));

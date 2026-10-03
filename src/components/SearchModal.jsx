@@ -490,14 +490,22 @@ export default function SearchModal({
                             ? searchResults.products.slice(0, 6)
                             : searchResults.products
                           ).map((product) => {
-                            const price =
-                              product.priceRange?.minVariantPrice?.amount ||
-                              product.price ||
-                              0;
-                            const comparePrice =
-                              product.compareAtPrice?.amount ||
-                              product.compare_at_price ||
-                              0;
+                            const price = Number(
+                              product.priceRange?.minVariantPrice?.amount ??
+                              product.price ??
+                              product.variants?.[0]?.price?.amount ??
+                              product.variants?.[0]?.price ??
+                              0
+                            );
+                            const comparePrice = Number(
+                              product.compareAtPrice?.amount ??
+                              product.compare_at_price ??
+                              product.compareAtPrice ??
+                              product.variants?.[0]?.compareAtPrice?.amount ??
+                              product.variants?.[0]?.compare_at_price ??
+                              product.variants?.[0]?.compareAtPrice ??
+                              0
+                            );
                             const image =
                               product.image_url ||
                               product.images?.[0]?.url ||

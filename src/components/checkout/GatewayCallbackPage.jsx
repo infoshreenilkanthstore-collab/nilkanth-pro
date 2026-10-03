@@ -133,8 +133,8 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
             paymentProvider: provider,
             paymentStatus: "paid",
             transactionReference: payload["Unique Ref Number"] || payload.txnid || payload.easepayid || "",
-            device_type: isMobile ? "mobile" : "desktop",
-            is_mobile: isMobile,
+            device_type: "desktop",
+            is_mobile: false,
           };
 
           const syncRes = await syncFinalOrder(syncPayload);

@@ -61,8 +61,30 @@ export default function ProductDetailModal({ product, onClose }) {
 
   if (!product) return null;
 
-  const currentPrice = selectedVariant?.price?.amount || detailedProduct?.priceRange?.minVariantPrice?.amount || detailedProduct?.price || 0;
-  const currentComparePrice = selectedVariant?.compareAtPrice?.amount || detailedProduct?.compareAtPrice?.amount || detailedProduct?.compare_at_price || 0;
+  const currentPrice = Number(
+    selectedVariant?.price?.amount ??
+    selectedVariant?.price ??
+    detailedProduct?.priceRange?.minVariantPrice?.amount ??
+    detailedProduct?.price ??
+    product?.priceRange?.minVariantPrice?.amount ??
+    product?.price ??
+    0
+  );
+  const currentComparePrice = Number(
+    selectedVariant?.compareAtPrice?.amount ??
+    selectedVariant?.compare_at_price ??
+    selectedVariant?.compareAtPrice ??
+    detailedProduct?.compareAtPrice?.amount ??
+    detailedProduct?.compare_at_price ??
+    detailedProduct?.compareAtPrice ??
+    detailedProduct?.variants?.[0]?.compareAtPrice?.amount ??
+    detailedProduct?.variants?.[0]?.compare_at_price ??
+    detailedProduct?.variants?.[0]?.compareAtPrice ??
+    product?.compareAtPrice?.amount ??
+    product?.compare_at_price ??
+    product?.compareAtPrice ??
+    0
+  );
   const images = detailedProduct?.images || [{ url: selectedImage }];
   const discountPercent = currentComparePrice > currentPrice
     ? Math.round(((currentComparePrice - currentPrice) / currentComparePrice) * 100)
@@ -302,7 +324,12 @@ export default function ProductDetailModal({ product, onClose }) {
                     <div
                       className={`text-stone-600 text-xs sm:text-sm leading-relaxed prose prose-stone max-w-none transition-all duration-300 ${!isDescriptionExpanded ? "line-clamp-6 max-h-[140px] overflow-hidden" : ""
                         }`}
-                      dangerouslySetInnerHTML={{ __html: detailedProduct.description }}
+                      dangerouslySetInnerHTML={{
+                        __html: (detailedProduct.description || "")
+                          .replace(/https?:\/\/store\.nilkanthdham\.in/gi, "")
+                          .replace(/https?:\/\/nilkanthdham\.in\/store/gi, "")
+                          .replace(/https?:\/\/nilkanthstore\.in/gi, ""),
+                      }}
                     />
                     {!isDescriptionExpanded && (
                       <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
