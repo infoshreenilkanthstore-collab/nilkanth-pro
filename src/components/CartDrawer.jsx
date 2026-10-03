@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   X,
   ShoppingBag,
@@ -53,9 +53,9 @@ export default function CartDrawer({ onNavigate, onSelectProduct }) {
     async function loadRecommendations() {
       setRecLoading(true);
       try {
-        const res = await fetchProducts({ page: 1, limit: 15 });
+        const res = await fetchProducts({ page: 1, limit: 50 });
         if (isMounted) {
-          const list = Array.isArray(res?.data) ? res.data : [];
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
           setRecommendations(list);
         }
       } catch (err) {
@@ -102,11 +102,41 @@ export default function CartDrawer({ onNavigate, onSelectProduct }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isCartOpen, closeCart]);
 
-  const inCartProductIds = new Set(cartItems.map((item) => String(item.product_id || item.id)));
-  const availableRecs = recommendations.filter(
-    (prod) => !inCartProductIds.has(String(prod.id))
-  );
-  const displayRecs = availableRecs.length > 0 ? availableRecs : recommendations;
+  const displayRecs = useMemo(() => {
+    const inCartProductIds = new Set(
+      cartItems.map((item) => String(item.product_id || item.id || item.productId))
+    );
+    const availableRecs = recommendations.filter(
+      (prod) => !inCartProductIds.has(String(prod.id))
+    );
+    const pool = availableRecs.length > 0 ? availableRecs : recommendations;
+
+    if (cartItems.length === 0) return pool;
+
+    const cartCategories = new Set(
+      cartItems
+        .map((it) =>
+          (
+            it.category ||
+            it.product_type ||
+            it.product?.category ||
+            it.product?.product_type ||
+            ""
+          )
+            .trim()
+            .toLowerCase()
+        )
+        .filter(Boolean)
+    );
+
+    return [...pool].sort((a, b) => {
+      const aCat = (a.category || a.product_type || "").trim().toLowerCase();
+      const bCat = (b.category || b.product_type || "").trim().toLowerCase();
+      const aMatch = cartCategories.has(aCat) ? 1 : 0;
+      const bMatch = cartCategories.has(bCat) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }, [recommendations, cartItems]);
 
   // Auto-scroll product timer in Mobile View (Unconditional Hook)
   useEffect(() => {
@@ -506,9 +536,8 @@ export default function CartDrawer({ onNavigate, onSelectProduct }) {
                             key={idx}
                             type="button"
                             onClick={() => setMobileSlideIndex(idx)}
-                            className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                              mobileSlideIndex === idx ? "w-4 bg-[#7a3726]" : "w-1.5 bg-stone-300"
-                            }`}
+                            className={`h-1.5 rounded-full transition-all cursor-pointer ${mobileSlideIndex === idx ? "w-4 bg-[#7a3726]" : "w-1.5 bg-stone-300"
+                              }`}
                             aria-label={`Go to slide ${idx + 1}`}
                           />
                         ))}

@@ -138,25 +138,115 @@ export default function ProductPage({
     }
   }, [productHandle, product?.id]);
 
-  // 2. Fetch related products from same collection or top picks
+  // 2. Fetch and score related / similar products from the same collection or category
   useEffect(() => {
     let isMounted = true;
-    fetchProducts({ page: 1, limit: 16 })
-      .then((res) => {
-        if (isMounted) {
-          const list = Array.isArray(res) ? res : res?.data || [];
-          const filtered = list.filter(
-            (p) => p.handle !== productHandle && p.id !== product?.id,
+
+    async function loadRelatedProducts() {
+      try {
+        const res = await fetchProducts({ page: 1, limit: 100 });
+        if (!isMounted) return;
+
+        const list = Array.isArray(res) ? res : res?.data || [];
+        const currentProd =
+          product ||
+          list.find(
+            (p) =>
+              p.handle === productHandle ||
+              String(p.id) === String(productHandle)
           );
-          setRelatedProducts(filtered);
-        }
-      })
-      .catch((err) => console.error("Failed loading related items:", err));
+
+        const currId = currentProd?.id ? String(currentProd.id) : null;
+        const currHandle = currentProd?.handle || productHandle;
+        const currTitle = currentProd?.title ? currentProd.title.trim().toLowerCase() : "";
+        const currCategory = (currentProd?.category || currentProd?.product_type || "").trim().toLowerCase();
+
+        const currTags = Array.isArray(currentProd?.tags)
+          ? currentProd.tags.map((t) => String(t).trim().toLowerCase())
+          : typeof currentProd?.tags === "string"
+            ? currentProd.tags.toLowerCase().split(",").map((t) => t.trim())
+            : [];
+        const currTagSet = new Set(currTags);
+
+        const currWords = (currentProd?.title || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter((w) => w.length > 3);
+
+        // Filter out current product strictly and score candidates based on category, tags, and keywords
+        const scored = list
+          .filter((p) => {
+            if (!p) return false;
+            const pId = String(p.id || "");
+            const pHandle = String(p.handle || "");
+            const pTitle = p.title ? p.title.trim().toLowerCase() : "";
+
+            if (currId && pId && pId === currId) return false;
+            if (currHandle && pHandle && pHandle === currHandle) return false;
+            if (currTitle && pTitle && pTitle === currTitle) return false;
+            return true;
+          })
+          .map((p) => {
+            let score = 0;
+            const pCat = (p.category || p.product_type || "").trim().toLowerCase();
+
+            // 1. Exact Category / product_type match (Highest priority)
+            if (currCategory && pCat) {
+              if (currCategory === pCat) {
+                score += 100;
+              } else if (currCategory.includes(pCat) || pCat.includes(currCategory)) {
+                score += 60;
+              }
+            }
+
+            // 2. Tag overlap
+            const pTags = Array.isArray(p.tags)
+              ? p.tags.map((t) => String(t).trim().toLowerCase())
+              : typeof p.tags === "string"
+                ? p.tags.toLowerCase().split(",").map((t) => t.trim())
+                : [];
+
+            let tagMatches = 0;
+            pTags.forEach((t) => {
+              if (currTagSet.has(t)) tagMatches += 1;
+            });
+            score += tagMatches * 10;
+
+            // 3. Title keyword overlap
+            const pTitleLower = (p.title || "").toLowerCase();
+            currWords.forEach((word) => {
+              if (pTitleLower.includes(word)) {
+                score += 8;
+              }
+            });
+
+            return { product: p, score };
+          });
+
+        // Sort by similarity score descending (highest score first)
+        scored.sort((a, b) => b.score - a.score);
+
+        const finalRelated = scored.map((item) => item.product).slice(0, 16);
+        setRelatedProducts(finalRelated);
+      } catch (err) {
+        console.error("Failed loading related items:", err);
+      }
+    }
+
+    loadRelatedProducts();
 
     return () => {
       isMounted = false;
     };
-  }, [productHandle, product?.id]);
+  }, [
+    productHandle,
+    product?.id,
+    product?.category,
+    product?.product_type,
+    product?.tags,
+    product?.title,
+  ]);
 
   // 3. Smooth Auto-Slide Effect for You May Also Like Slider
   useEffect(() => {
