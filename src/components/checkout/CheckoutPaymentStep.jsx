@@ -10,6 +10,7 @@ export default function CheckoutPaymentStep({
   onPlaceOrder,
   onBackStep,
   errorMessage = "",
+  isOneStep = true,
 }) {
   const renderGatewayIcon = (provider) => {
     switch (provider) {
@@ -129,23 +130,25 @@ export default function CheckoutPaymentStep({
         </p>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBackStep}
-          disabled={isPlacingOrder}
-          className="text-stone-600 hover:text-stone-900 font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back to Shipping</span>
-        </button>
+      {/* Navigation & Submit CTA */}
+      <div className={`mt-6 pt-4 border-t border-stone-100 flex items-center ${isOneStep ? "justify-end" : "justify-between"}`}>
+        {!isOneStep && (
+          <button
+            type="button"
+            onClick={onBackStep}
+            disabled={isPlacingOrder}
+            className="text-stone-600 hover:text-stone-900 font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back to Shipping</span>
+          </button>
+        )}
 
         <button
           type="button"
           onClick={onPlaceOrder}
           disabled={isPlacingOrder}
-          className="bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3.5 px-8 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
+          className="w-full sm:w-auto bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3.5 px-8 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
         >
           {isPlacingOrder ? (
             <>

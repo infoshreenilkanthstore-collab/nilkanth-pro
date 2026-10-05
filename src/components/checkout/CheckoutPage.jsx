@@ -107,6 +107,95 @@ export default function CheckoutPage({
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Field-level Validation Errors & Touched States
+  const [formErrors, setFormErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
+
+  const validateField = useCallback((field, value, customCustomer = customer, customShipping = shippingAddress) => {
+    switch (field) {
+      case "firstName": {
+        const val = value !== undefined ? value : customCustomer.firstName;
+        if (!val?.trim()) return "First name is required";
+        if (val.trim().length < 2) return "First name must be at least 2 characters";
+        return "";
+      }
+      case "lastName": {
+        const val = value !== undefined ? value : customCustomer.lastName;
+        if (!val?.trim()) return "Last name is required";
+        return "";
+      }
+      case "email": {
+        const val = value !== undefined ? value : customCustomer.email;
+        if (!val?.trim()) return "Email address is required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return "Please enter a valid email address (e.g. name@example.com)";
+        return "";
+      }
+      case "phone": {
+        const val = value !== undefined ? value : customCustomer.phone;
+        const clean = String(val || "").replace(/\D/g, "");
+        if (!clean) return "Mobile phone number is required";
+        if (clean.length !== 10) return "Please enter a valid 10-digit mobile number";
+        return "";
+      }
+      case "address1": {
+        const val = value !== undefined ? value : customShipping.address1;
+        if (!val?.trim()) return "Delivery street address is required";
+        return "";
+      }
+      case "city": {
+        const val = value !== undefined ? value : customShipping.city;
+        if (!val?.trim()) return "City is required";
+        return "";
+      }
+      case "state": {
+        const val = value !== undefined ? value : customShipping.state;
+        if (!val?.trim()) return "State is required";
+        return "";
+      }
+      case "pincode": {
+        const val = value !== undefined ? value : customShipping.pincode;
+        const clean = String(val || "").replace(/\D/g, "");
+        if (!clean) return "PIN code is required";
+        if (clean.length !== 6) return "Please enter a valid 6-digit PIN code";
+        return "";
+      }
+      default:
+        return "";
+    }
+  }, [customer, shippingAddress]);
+
+  const handleBlurField = (field) => {
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+    const errorMsg = validateField(field);
+    setFormErrors((prev) => ({ ...prev, [field]: errorMsg }));
+  };
+
+  const handleCustomerChangeWithValidation = (updatedCustomer) => {
+    setCustomer(updatedCustomer);
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      ["firstName", "lastName", "email", "phone"].forEach((f) => {
+        if (touchedFields[f]) {
+          next[f] = validateField(f, updatedCustomer[f], updatedCustomer);
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleShippingChangeWithValidation = (updatedShipping) => {
+    setShippingAddress(updatedShipping);
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      ["address1", "city", "state", "pincode"].forEach((f) => {
+        if (touchedFields[f]) {
+          next[f] = validateField(f, updatedShipping[f], undefined, updatedShipping);
+        }
+      });
+      return next;
+    });
+  };
+
   // Store Info (tax inclusive/exclusive settings, state origin, tax rates)
   const [storeInfo, setStoreInfo] = useState({
     tax_inclusive: true,
@@ -341,7 +430,7 @@ export default function CheckoutPage({
 
     const fullName = `${customer.firstName} ${customer.lastName}`.trim() || "Devoted Customer";
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    const stage = stageOverride || (currentStep === 1 ? "customer_step" : currentStep === 2 ? "shipping_step" : "payment_step");
+    const stage = stageOverride || "one_step_checkout";
 
     const payload = {
       sessionId,
@@ -432,7 +521,6 @@ export default function CheckoutPage({
     shippingCost,
     taxCalculations,
     grandTotal,
-    currentStep,
     selectedShippingRate,
   ]);
 
@@ -481,30 +569,6 @@ export default function CheckoutPage({
     grandTotal,
     syncCheckoutSession,
   ]);
-
-  // Sync session on moving forward
-
-  const handleProceedToShipping = async () => {
-    if (!customer.firstName || !customer.lastName || !customer.email || !customer.phone) {
-      return;
-    }
-    setLoading(true);
-    await syncCheckoutSession();
-    setLoading(false);
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleProceedToPayment = async () => {
-    if (!shippingAddress.address1 || !shippingAddress.city || !shippingAddress.pincode) {
-      return;
-    }
-    setLoading(true);
-    await syncCheckoutSession();
-    setLoading(false);
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // -------------------------------------------------------------
   // Order Finalization Flow (Step 4 & 5 of checkout.md)
@@ -607,8 +671,54 @@ export default function CheckoutPage({
   // Order Initiation & Multi-Payment Gateway Flow
   // -------------------------------------------------------------
   const handlePlaceOrder = async () => {
-    setIsPlacingOrder(true);
     setErrorMessage("");
+
+    // 1. Run full validation across customer & shipping fields
+    const allErrors = {
+      firstName: validateField("firstName", customer.firstName),
+      lastName: validateField("lastName", customer.lastName),
+      email: validateField("email", customer.email),
+      phone: validateField("phone", customer.phone),
+      pincode: validateField("pincode", shippingAddress.pincode),
+      address1: validateField("address1", shippingAddress.address1),
+      city: validateField("city", shippingAddress.city),
+      state: validateField("state", shippingAddress.state),
+    };
+
+    const hasErrors = Object.values(allErrors).some(Boolean);
+    if (hasErrors) {
+      // Mark all fields as touched so validation highlights appear
+      setTouchedFields({
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        pincode: true,
+        address1: true,
+        city: true,
+        state: true,
+      });
+      setFormErrors(allErrors);
+
+      // Find first error and scroll / focus smoothly
+      const firstErrorKey = Object.keys(allErrors).find((k) => allErrors[k]);
+      if (firstErrorKey) {
+        setErrorMessage(allErrors[firstErrorKey]);
+        const elem = document.getElementById(`checkout-${firstErrorKey}`);
+        if (elem) {
+          elem.focus();
+          elem.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
+    }
+
+    if (!selectedProvider) {
+      setErrorMessage("Please select a Payment Method.");
+      return;
+    }
+
+    setIsPlacingOrder(true);
 
     try {
       // 1. Ensure Abandoned Checkout is synced
@@ -819,10 +929,10 @@ export default function CheckoutPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfaf7] py-6 sm:py-12 px-4 sm:px-6 lg:px-8 font-nunito animate-fadeIn">
+    <div className="min-h-screen bg-[#fcfaf7] py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-nunito animate-fadeIn">
       <div className="max-w-6xl mx-auto">
-        {/* Top Breadcrumb / Return to Cart */}
-        <div className="flex items-center justify-between pb-6 border-b border-stone-200/80">
+        {/* Top Header & Security Bar */}
+        <div className="flex items-center justify-between pb-5 border-b border-stone-200/80 mb-6">
           <button
             type="button"
             onClick={() => onNavigate && onNavigate("shop")}
@@ -832,134 +942,82 @@ export default function CheckoutPage({
             <span>Continue Shopping</span>
           </button>
 
-          <div className="flex items-center gap-1.5 text-stone-700 text-xs font-bold">
+          <div className="flex items-center gap-2 text-stone-700 text-xs font-bold bg-amber-50/80 border border-amber-200/60 px-3 py-1.5 rounded-full">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span className="hidden sm:inline">256-Bit SSL Encrypted Checkout</span>
-            <span className="sm:hidden">SSL Secured</span>
-          </div>
-        </div>
-
-        {/* Step Progress Stepper */}
-        <div className="mb-4 max-w-lg mx-auto">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-full bg-stone-200 -z-0" />
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-[#700b10] transition-all duration-300 -z-0"
-              style={{
-                width: currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%",
-              }}
-            />
-
-            {/* Step 1 */}
-            <div className="flex flex-col items-center gap-1.5 z-10">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${currentStep >= 1
-                  ? "bg-[#700b10] text-white shadow-xs"
-                  : "bg-stone-200 text-stone-500"
-                  }`}
-              >
-                {currentStep > 1 ? <Check className="w-4 h-4" /> : "1"}
-              </div>
-              <span className="text-[11px] font-bold text-stone-700">Contact</span>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex flex-col items-center gap-1.5 z-10">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${currentStep >= 2
-                  ? "bg-[#700b10] text-white shadow-xs"
-                  : "bg-white border-2 border-stone-300 text-stone-500"
-                  }`}
-              >
-                {currentStep > 2 ? <Check className="w-4 h-4" /> : "2"}
-              </div>
-              <span className="text-[11px] font-bold text-stone-700">Shipping</span>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex flex-col items-center gap-1.5 z-10">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${currentStep === 3
-                  ? "bg-[#700b10] text-white shadow-xs"
-                  : "bg-white border-2 border-stone-300 text-stone-500"
-                  }`}
-              >
-                3
-              </div>
-              <span className="text-[11px] font-bold text-stone-700">Payment</span>
-            </div>
+            <span className="hidden sm:inline">100% Encrypted &amp; Secure One-Step Checkout</span>
+            <span className="sm:hidden">100% Secure Checkout</span>
           </div>
         </div>
 
         {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Stepper Form Column */}
+          {/* Main Single-Step Form Column (All 3 Sections stacked seamlessly) */}
           <div className="lg:col-span-7 space-y-6">
-            {currentStep === 1 && (
-              <CheckoutCustomerStep
-                customer={customer}
-                onCustomerChange={setCustomer}
-                currentUser={currentUser}
-                savedAddresses={savedAddresses}
-                selectedAddressId={selectedAddressId}
-                onSelectSavedAddress={handleSelectSavedAddress}
-                onOpenAuthModal={onOpenAuthModal}
-                onNextStep={handleProceedToShipping}
-                loading={loading}
-              />
-            )}
+            {/* Step 1: Customer Information */}
+            <CheckoutCustomerStep
+              customer={customer}
+              onCustomerChange={handleCustomerChangeWithValidation}
+              currentUser={currentUser}
+              savedAddresses={savedAddresses}
+              selectedAddressId={selectedAddressId}
+              onSelectSavedAddress={handleSelectSavedAddress}
+              onOpenAuthModal={onOpenAuthModal}
+              loading={loading}
+              isOneStep={true}
+              errors={formErrors}
+              touched={touchedFields}
+              onBlurField={handleBlurField}
+            />
 
-            {currentStep === 2 && (
-              <CheckoutShippingStep
-                shippingAddress={shippingAddress}
-                onShippingAddressChange={setShippingAddress}
-                shippingRates={shippingRates}
-                selectedShippingRate={selectedShippingRate}
-                onSelectShippingRate={setSelectedShippingRate}
-                onBackStep={() => setCurrentStep(1)}
-                onNextStep={handleProceedToPayment}
-                loading={loading}
-                currentUser={currentUser}
-                savedAddresses={savedAddresses}
-                selectedAddressId={selectedAddressId}
-                onSelectSavedAddress={handleSelectSavedAddress}
-                onSaveNewAddress={async (addrPayload) => {
-                  // Attach customer name/phone from current customer state
-                  const enriched = {
-                    ...addrPayload,
-                    first_name: customer.firstName || "",
-                    last_name: customer.lastName || "",
-                    phone: customer.phone || "",
-                  };
-                  return addCustomerAddress(enriched);
-                }}
-                onAddressListUpdated={() => {
-                  // Re-fetch addresses to update the saved list
-                  fetchCustomerAddresses().then((res) => {
-                    if (res.success && Array.isArray(res.data)) {
-                      setSavedAddresses(res.data);
-                    }
-                  });
-                }}
-              />
-            )}
+            {/* Step 2: Shipping & Delivery */}
+            <CheckoutShippingStep
+              shippingAddress={shippingAddress}
+              onShippingAddressChange={handleShippingChangeWithValidation}
+              shippingRates={shippingRates}
+              selectedShippingRate={selectedShippingRate}
+              onSelectShippingRate={setSelectedShippingRate}
+              loading={loading}
+              isOneStep={true}
+              currentUser={currentUser}
+              savedAddresses={savedAddresses}
+              selectedAddressId={selectedAddressId}
+              onSelectSavedAddress={handleSelectSavedAddress}
+              onSaveNewAddress={async (addrPayload) => {
+                const enriched = {
+                  ...addrPayload,
+                  first_name: customer.firstName || "",
+                  last_name: customer.lastName || "",
+                  phone: customer.phone || "",
+                };
+                return addCustomerAddress(enriched);
+              }}
+              onAddressListUpdated={() => {
+                fetchCustomerAddresses().then((res) => {
+                  if (res.success && Array.isArray(res.data)) {
+                    setSavedAddresses(res.data);
+                  }
+                });
+              }}
+              errors={formErrors}
+              touched={touchedFields}
+              onBlurField={handleBlurField}
+            />
 
-            {currentStep === 3 && (
-              <CheckoutPaymentStep
-                gateways={gateways}
-                selectedProvider={selectedProvider}
-                onSelectProvider={setSelectedProvider}
-                grandTotal={grandTotal}
-                isPlacingOrder={isPlacingOrder}
-                onPlaceOrder={handlePlaceOrder}
-                onBackStep={() => setCurrentStep(2)}
-                errorMessage={errorMessage}
-              />
-            )}
+            {/* Step 3: Payment Method & Place Order CTA */}
+            <CheckoutPaymentStep
+              gateways={gateways}
+              selectedProvider={selectedProvider}
+              onSelectProvider={setSelectedProvider}
+              grandTotal={grandTotal}
+              isPlacingOrder={isPlacingOrder}
+              onPlaceOrder={handlePlaceOrder}
+              errorMessage={errorMessage}
+              isOneStep={true}
+            />
           </div>
 
           {/* Sticky Order Summary Column */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 sticky top-24">
             <CheckoutSummary
               items={cartItems}
               subtotal={subtotal}

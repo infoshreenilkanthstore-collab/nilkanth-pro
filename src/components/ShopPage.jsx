@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, X, Sparkles, ArrowLeft } from 'lucide-react';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
-import { fetchProducts, fetchCollectionByHandle } from '../services/api';
+import { fetchProducts, fetchCollectionByHandle, fetchCollections } from '../services/api';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -74,19 +74,83 @@ const extractProductWeights = (prod) => {
 export default function ShopPage({ onSelectProduct, collectionHandle = null, onNavigate }) {
   const [products, setProducts] = useState([]);
   const [collectionInfo, setCollectionInfo] = useState(null);
+  const [collectionsList, setCollectionsList] = useState([]);
+  const [collectionProductMap, setCollectionProductMap] = useState(new Map());
   const [loading, setLoading] = useState(true);
 
   // Filter states
+  const [selectedCollections, setSelectedCollections] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(2410);
   const [selectedWeights, setSelectedWeights] = useState([]);
+  const [isCollectionOpen, setIsCollectionOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Sorting & Pagination states
   const [sortBy, setSortBy] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch all primary product collections and their exact product sets from API
+  useEffect(() => {
+    let isMounted = true;
+    fetchCollections()
+      .then(async (res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res) ? res : res?.data || [];
+        
+        // Filter strictly to authentic distinct store product collections
+        const activeOnly = list.filter((item) => {
+          const handle = (item.handle || "").toLowerCase();
+          const title = (item.title || "").toLowerCase();
+          return (
+            item.is_active !== false &&
+            item.is_display !== false &&
+            parseInt(item.product_count || 0, 10) > 0 &&
+            !title.includes("%") &&
+            !handle.includes("%") &&
+            handle !== "agarbatti-&-dhoop" &&
+            handle !== "perfume,-attar-&-air-freshner"
+          );
+        });
+
+        // Order logically: Agarbatti, Attar, Perfume, Dhoop, Air Freshner
+        activeOnly.sort((a, b) => {
+          const countA = parseInt(a.product_count || 0, 10);
+          const countB = parseInt(b.product_count || 0, 10);
+          return countB - countA;
+        });
+
+        setCollectionsList(activeOnly);
+
+        // Fetch each collection's exact products in parallel for 100% accurate filtering
+        const colMap = new Map();
+        await Promise.allSettled(
+          activeOnly.map(async (col) => {
+            try {
+              const single = await fetchCollectionByHandle(col.handle);
+              const colProducts = single?.data?.products || [];
+              const idSet = new Set(colProducts.map((p) => Number(p.id)));
+              colMap.set(col.handle, idSet);
+            } catch (err) {
+              console.error("Failed fetching collection products:", col.handle, err);
+            }
+          })
+        );
+
+        if (isMounted) {
+          setCollectionProductMap(colMap);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed loading collections for filter:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Fetch products (either collection-specific or all products)
   useEffect(() => {
@@ -164,6 +228,30 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
     }
   }, [products, maxAvailablePrice]);
 
+  // Compute dynamic collections list with exact product counts
+  const dynamicCollections = useMemo(() => {
+    if (!collectionsList || collectionsList.length === 0) return [];
+
+    return collectionsList.map((col) => {
+      const idSet = collectionProductMap.get(col.handle);
+      let count = 0;
+      if (idSet && idSet.size > 0) {
+        count = products.length > 0
+          ? products.filter((p) => idSet.has(Number(p.id))).length
+          : idSet.size;
+      } else {
+        count = parseInt(col.product_count || 0, 10);
+      }
+
+      return {
+        ...col,
+        count,
+        label: col.title || col.name || col.handle,
+        key: col.handle,
+      };
+    });
+  }, [collectionsList, collectionProductMap, products]);
+
   // Compute 100% dynamic weights with actual live product counts
   const dynamicWeights = useMemo(() => {
     const countMap = new Map();
@@ -206,10 +294,20 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
   }, [products, productWeightMap]);
 
   const handleClearAll = () => {
+    setSelectedCollections([]);
     setInStockOnly(false);
     setMinPrice(0);
     setMaxPrice(maxAvailablePrice);
     setSelectedWeights([]);
+    setCurrentPage(1);
+  };
+
+  const toggleCollection = (colKey) => {
+    setSelectedCollections((prev) =>
+      prev.includes(colKey)
+        ? prev.filter((k) => k !== colKey)
+        : [...prev, colKey]
+    );
     setCurrentPage(1);
   };
 
@@ -222,15 +320,34 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
     setCurrentPage(1);
   };
 
-  // Fast memoized product filtering
+  // Fast memoized product filtering with exact collection membership
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice) || 0;
     const max = Number(maxPrice) || Infinity;
+    const hasCollectionFilter = selectedCollections.length > 0;
     const hasWeightFilter = selectedWeights.length > 0;
     const selectedWeightSet = hasWeightFilter ? new Set(selectedWeights) : null;
 
     return products.filter((prod) => {
-      // 1. Price filter
+      const prodId = Number(prod.id);
+
+      // 1. Collection filter: check if product belongs to any of the selected collections
+      if (hasCollectionFilter) {
+        const matchesCollection = selectedCollections.some((colKey) => {
+          const idSet = collectionProductMap.get(colKey);
+          if (idSet) {
+            return idSet.has(prodId);
+          }
+          // Fallback if map is loading: check collection handle / slug on product
+          return (
+            (prod.collection_handle && prod.collection_handle === colKey) ||
+            (prod.category && prod.category.toLowerCase().includes(colKey.toLowerCase()))
+          );
+        });
+        if (!matchesCollection) return false;
+      }
+
+      // 2. Price filter
       const price = Number(
         prod.priceRange?.minVariantPrice?.amount ??
         prod.price ??
@@ -241,12 +358,12 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
         return false;
       }
 
-      // 2. Availability filter
+      // 3. Availability filter
       if (inStockOnly && prod.in_stock === false) {
         return false;
       }
 
-      // 3. Weight filter (instant O(1) Set lookup)
+      // 4. Weight filter (instant O(1) Set lookup)
       if (hasWeightFilter) {
         const key = prod.id || prod.handle || prod;
         const weights = productWeightMap.get(key) || [];
@@ -256,7 +373,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
 
       return true;
     });
-  }, [products, minPrice, maxPrice, inStockOnly, selectedWeights, productWeightMap]);
+  }, [products, selectedCollections, collectionProductMap, minPrice, maxPrice, inStockOnly, selectedWeights, productWeightMap]);
 
   // Sort products with alphabetical & numeric accuracy
   const sortedProducts = useMemo(() => {
@@ -298,6 +415,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
   };
 
   const hasActiveFilters =
+    selectedCollections.length > 0 ||
     selectedWeights.length > 0 ||
     inStockOnly ||
     minPrice > 0 ||
@@ -364,6 +482,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
               className="lg:hidden inline-flex items-center gap-2 px-4 py-2 bg-white border border-stone-300 rounded-xl text-xs sm:text-sm font-bold font-nunito text-[#700b10] shadow-xs cursor-pointer hover:bg-stone-50"
             >
               <Filter className="w-4 h-4" />
+              <span>Filters</span>
               {hasActiveFilters && (
                 <span className="w-2 h-2 rounded-full bg-[#700b10]" />
               )}
@@ -414,7 +533,52 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                 )}
               </div>
 
-              {/* Filter 1: Availability */}
+              {/* Filter 1: Collection Wise Filter */}
+              {dynamicCollections.length > 0 && (
+                <div className="py-4 border-b border-amber-100/60">
+                  <button
+                    type="button"
+                    onClick={() => setIsCollectionOpen(!isCollectionOpen)}
+                    className="w-full flex items-center justify-between text-left cursor-pointer group mb-3"
+                  >
+                    <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">
+                      Collection
+                    </span>
+                    <span className="text-stone-400 group-hover:text-stone-600">
+                      {isCollectionOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </span>
+                  </button>
+
+                  {isCollectionOpen && (
+                    <div className="max-h-48 overflow-y-auto pr-2 space-y-2.5 custom-scrollbar-maroon">
+                      {dynamicCollections.map((col) => {
+                        const isChecked = selectedCollections.includes(col.key);
+                        return (
+                          <label
+                            key={col.key}
+                            className="flex items-center justify-between text-xs sm:text-[13px] text-stone-800 cursor-pointer select-none group py-0.5"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleCollection(col.key)}
+                                className="w-4 h-4 rounded border-stone-300 text-[#700b10] focus:ring-[#700b10] cursor-pointer accent-[#700b10]"
+                              />
+                              <span className="group-hover:text-[#700b10] transition-colors">{col.label}</span>
+                            </div>
+                            <span className="text-[11px] font-semibold text-stone-400">
+                              ({col.count})
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Filter 2: Availability */}
               <div className="py-4 border-b border-amber-100/60">
                 <span className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
                   Availability
@@ -433,7 +597,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                 </label>
               </div>
 
-              {/* Filter 2: Price with Dual Range Slider & Editable Input Pills */}
+              {/* Filter 3: Price with Dual Range Slider & Editable Input Pills */}
               <div className="py-4 border-b border-amber-100/60">
                 <button
                   type="button"
@@ -506,7 +670,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                 )}
               </div>
 
-              {/* Filter 3: Dynamic Weights with Live Counts & Thin Maroon Scrollbar */}
+              {/* Filter 4: Dynamic Weights with Live Counts & Thin Maroon Scrollbar */}
               {dynamicWeights.length > 0 && (
                 <div className="pt-4">
                   <span className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
@@ -550,6 +714,22 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
             {hasActiveFilters && (
               <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-white rounded-xl border border-stone-200/80 shadow-2xs">
                 <span className="text-xs font-bold text-stone-400 uppercase tracking-wider mr-1">Active:</span>
+
+                {/* Collection Chips */}
+                {selectedCollections.map((colKey) => {
+                  const colObj = collectionsList.find((c) => (c.handle || c.slug || String(c.id)) === colKey);
+                  const label = colObj?.title || colObj?.name || colKey;
+                  return (
+                    <span key={colKey} className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#700b10] text-[#ebd99c] rounded-full text-xs font-semibold shadow-2xs">
+                      {label}
+                      <button type="button" onClick={() => toggleCollection(colKey)} className="hover:text-white cursor-pointer">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+
+                {/* In Stock Chip */}
                 {inStockOnly && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#700b10]/10 text-[#700b10] rounded-full text-xs font-semibold">
                     In Stock Only
@@ -558,6 +738,8 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                     </button>
                   </span>
                 )}
+
+                {/* Weight Chips */}
                 {selectedWeights.map((w) => (
                   <span key={w} className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#700b10] text-[#ebd99c] rounded-full text-xs font-semibold shadow-2xs">
                     {w}
@@ -566,6 +748,8 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                     </button>
                   </span>
                 ))}
+
+                {/* Price Chip */}
                 {(minPrice > 0 || maxPrice < maxAvailablePrice) && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-xs font-semibold">
                     ₹{minPrice || 0} - ₹{maxPrice || maxAvailablePrice}
@@ -574,6 +758,7 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                     </button>
                   </span>
                 )}
+
                 <button
                   type="button"
                   onClick={handleClearAll}
@@ -697,6 +882,34 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
                 </button>
               </div>
 
+              {/* Mobile Collection Filter */}
+              {dynamicCollections.length > 0 && (
+                <div className="py-4 border-b border-stone-200">
+                  <span className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
+                    Collection
+                  </span>
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar-maroon">
+                    {dynamicCollections.map((col) => (
+                      <label
+                        key={col.key}
+                        className="flex items-center justify-between text-xs text-stone-800 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedCollections.includes(col.key)}
+                            onChange={() => toggleCollection(col.key)}
+                            className="w-4 h-4 rounded border-stone-300 accent-[#700b10]"
+                          />
+                          <span>{col.label}</span>
+                        </div>
+                        <span className="text-[11px] text-stone-400">({col.count})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Mobile Availability */}
               <div className="py-4 border-b border-stone-200">
                 <span className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
@@ -818,3 +1031,4 @@ export default function ShopPage({ onSelectProduct, collectionHandle = null, onN
     </div>
   );
 }
+

@@ -86,8 +86,8 @@ export default function FAQPage({ onNavigate }) {
                     >
                       <span
                         className={`text-sm sm:text-[15px] font-semibold transition-colors duration-200 pr-4 leading-snug font-nunito ${isOpen
-                            ? "text-[#700b10] font-bold"
-                            : "text-stone-800 group-hover:text-[#700b10]"
+                          ? "text-[#700b10] font-bold"
+                          : "text-stone-800 group-hover:text-[#700b10]"
                           }`}
                       >
                         {faq.question}
@@ -95,8 +95,8 @@ export default function FAQPage({ onNavigate }) {
                       <div className="flex-shrink-0 ml-3">
                         <div
                           className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${isOpen
-                              ? "bg-[#700b10] text-white shadow-xs"
-                              : "bg-stone-100 text-stone-600 group-hover:text-[#700b10]"
+                            ? "bg-[#700b10] text-white shadow-xs"
+                            : "bg-stone-100 text-stone-600 group-hover:text-[#700b10]"
                             }`}
                         >
                           {isOpen ? (
@@ -130,7 +130,7 @@ export default function FAQPage({ onNavigate }) {
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
               <a
-                href="https://wa.me/919726778118"
+                href="https://wa.me/919726778118?text=Welcome%20to%20Shri%20Nilkanth%20Store%2C%20How%20can%20I%20help%20you%3F"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-[#ebd99c] hover:text-white px-4 py-2.5 rounded-xl border border-white/15 transition-all font-semibold"

@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Mail, Phone, Lock, CheckCircle2, ChevronRight } from "lucide-react";
+import { User, Mail, Phone, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function CheckoutCustomerStep({
   customer,
@@ -9,22 +9,35 @@ export default function CheckoutCustomerStep({
   selectedAddressId,
   onSelectSavedAddress,
   onOpenAuthModal,
-  onNextStep,
   loading = false,
+  isOneStep = true,
+  errors = {},
+  touched = {},
+  onBlurField,
 }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let sanitizedValue = value;
+
+    if (name === "phone") {
+      // Keep only numbers up to 10 digits
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
     onCustomerChange({
       ...customer,
-      [name]: value,
+      [name]: sanitizedValue,
     });
   };
 
-  const isFormValid =
-    customer.email?.trim() &&
-    customer.phone?.trim() &&
-    customer.firstName?.trim() &&
-    customer.lastName?.trim();
+  const handleBlur = (fieldName) => {
+    if (onBlurField) onBlurField(fieldName);
+  };
+
+  const isFirstNameInvalid = touched.firstName && errors.firstName;
+  const isLastNameInvalid = touched.lastName && errors.lastName;
+  const isEmailInvalid = touched.email && errors.email;
+  const isPhoneInvalid = touched.phone && errors.phone;
 
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-7 shadow-xs">
@@ -113,7 +126,7 @@ export default function CheckoutCustomerStep({
         </div>
       )}
 
-      {/* Input Fields */}
+      {/* Input Fields with Inline Validation */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -121,17 +134,29 @@ export default function CheckoutCustomerStep({
               First Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <User className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isFirstNameInvalid ? "text-rose-400" : "text-stone-400"}`} />
               <input
                 type="text"
+                id="checkout-firstName"
                 name="firstName"
                 value={customer.firstName || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("firstName")}
                 placeholder="e.g. Shantanu"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                  isFirstNameInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
             </div>
+            {isFirstNameInvalid && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.firstName}</span>
+              </p>
+            )}
           </div>
 
           <div>
@@ -140,13 +165,25 @@ export default function CheckoutCustomerStep({
             </label>
             <input
               type="text"
+              id="checkout-lastName"
               name="lastName"
               value={customer.lastName || ""}
               onChange={handleChange}
+              onBlur={() => handleBlur("lastName")}
               placeholder="e.g. Kolhatkar"
               required
-              className="w-full px-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+              className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                isLastNameInvalid
+                  ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                  : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+              }`}
             />
+            {isLastNameInvalid && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.lastName}</span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -156,18 +193,31 @@ export default function CheckoutCustomerStep({
               Email Address <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <Mail className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isEmailInvalid ? "text-rose-400" : "text-stone-400"}`} />
               <input
                 type="email"
+                id="checkout-email"
                 name="email"
                 value={customer.email || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("email")}
                 placeholder="customer@example.com"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                  isEmailInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
             </div>
-            <span className="text-[10px] text-stone-400 mt-1 block">Invoices &amp; order updates sent here</span>
+            {isEmailInvalid ? (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.email}</span>
+              </p>
+            ) : (
+              <span className="text-[10px] text-stone-400 mt-1 block">Invoices &amp; order updates sent here</span>
+            )}
           </div>
 
           <div>
@@ -175,33 +225,34 @@ export default function CheckoutCustomerStep({
               Mobile Phone <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <Phone className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isPhoneInvalid ? "text-rose-400" : "text-stone-400"}`} />
               <input
                 type="tel"
+                id="checkout-phone"
                 name="phone"
+                maxLength={10}
                 value={customer.phone || ""}
                 onChange={handleChange}
-                placeholder="+91 98765 43210"
+                onBlur={() => handleBlur("phone")}
+                placeholder="98765 43210"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 tracking-wider transition-all ${
+                  isPhoneInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
             </div>
-            <span className="text-[10px] text-stone-400 mt-1 block">For delivery agent call &amp; WhatsApp updates</span>
+            {isPhoneInvalid ? (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.phone}</span>
+              </p>
+            ) : (
+              <span className="text-[10px] text-stone-400 mt-1 block">10-digit number for delivery agent call &amp; WhatsApp updates</span>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Continue Button */}
-      <div className="mt-6 pt-4 border-t border-stone-100 flex justify-end">
-        <button
-          type="button"
-          onClick={onNextStep}
-          disabled={!isFormValid || loading}
-          className="bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3 px-6 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
-        >
-          <span>Continue to Shipping</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );

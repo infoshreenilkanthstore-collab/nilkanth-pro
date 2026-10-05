@@ -26,18 +26,10 @@ export function CartProvider({ children }) {
 
   const openCart = useCallback(() => {
     setIsCartOpen(true);
-    try {
-      window.history.pushState({ modal: "cart" }, "");
-    } catch {}
   }, []);
 
   const closeCart = useCallback(() => {
     setIsCartOpen(false);
-    if (window.history.state?.modal === "cart") {
-      try {
-        window.history.back();
-      } catch {}
-    }
   }, []);
 
   // Listen for mobile back button to close cart

@@ -300,7 +300,7 @@ export default function Footer({ onNavigate }) {
 
                 {/* WhatsApp Community */}
                 <a
-                  href="https://chat.whatsapp.com/Ft1TM6WNHaALWyYQSbIF52"
+                  href="https://wa.me/919726778118?text=Welcome%20to%20Shri%20Nilkanth%20Store%2C%20How%20can%20I%20help%20you%3F"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-[#831e24] hover:bg-[#ebd99c] text-white hover:text-[#700b10] flex items-center justify-center transition-all duration-200 shadow-xs hover:scale-105"
@@ -335,7 +335,7 @@ export default function Footer({ onNavigate }) {
               <div>
                 <span className="text-[12px] text-stone-300 block font-nunito">Sales Support</span>
                 <a
-                  href="https://wa.me/919726778118"
+                  href="https://wa.me/919726778118?text=Welcome%20to%20Shri%20Nilkanth%20Store%2C%20How%20can%20I%20help%20you%3F"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[#ebd99c] hover:text-white font-bold font-nunito text-[16px] sm:text-[17px] transition-colors"

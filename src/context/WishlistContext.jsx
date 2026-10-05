@@ -48,18 +48,10 @@ export function WishlistProvider({ children, currentUser, onOpenAuth }) {
 
   const openDrawer = useCallback(() => {
     setIsDrawerOpen(true);
-    try {
-      window.history.pushState({ modal: "wishlist" }, "");
-    } catch {}
   }, []);
 
   const closeDrawer = useCallback(() => {
     setIsDrawerOpen(false);
-    if (window.history.state?.modal === "wishlist") {
-      try {
-        window.history.back();
-      } catch {}
-    }
   }, []);
 
   // Listen for mobile back button to close wishlist drawer

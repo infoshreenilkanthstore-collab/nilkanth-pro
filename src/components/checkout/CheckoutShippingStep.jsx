@@ -23,6 +23,7 @@ export default function CheckoutShippingStep({
   onBackStep,
   onNextStep,
   loading = false,
+  isOneStep = true,
   // For logged-in customers
   currentUser = null,
   savedAddresses = [],
@@ -30,6 +31,9 @@ export default function CheckoutShippingStep({
   onSelectSavedAddress,
   onSaveNewAddress,           // async fn(addressData) → { success, data, message }
   onAddressListUpdated,       // fn(newAddressList) to refresh parent savedAddresses
+  errors = {},
+  touched = {},
+  onBlurField,
 }) {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeSuccess, setPincodeSuccess] = useState(false);
@@ -51,11 +55,24 @@ export default function CheckoutShippingStep({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let sanitizedValue = value;
+    if (name === "pincode") {
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
+    }
     onShippingAddressChange({
       ...shippingAddress,
-      [name]: value,
+      [name]: sanitizedValue,
     });
   };
+
+  const handleBlur = (fieldName) => {
+    if (onBlurField) onBlurField(fieldName);
+  };
+
+  const isPincodeInvalid = touched.pincode && errors.pincode;
+  const isAddress1Invalid = touched.address1 && errors.address1;
+  const isCityInvalid = touched.city && errors.city;
+  const isStateInvalid = touched.state && errors.state;
 
   const handleSelectSaved = (addr) => {
     setAddressMode("saved");
@@ -150,7 +167,7 @@ export default function CheckoutShippingStep({
       }
     }
 
-    onNextStep();
+    if (onNextStep) onNextStep();
   };
 
   return (
@@ -254,31 +271,41 @@ export default function CheckoutShippingStep({
               PIN Code (Postal Code) <span className="text-red-500">*</span>
             </label>
             <div className="relative max-w-xs">
-              <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <MapPin className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isPincodeInvalid ? "text-rose-400" : "text-stone-400"}`} />
               <input
                 type="text"
+                id="checkout-pincode"
                 name="pincode"
                 maxLength={6}
                 value={shippingAddress.pincode || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("pincode")}
                 placeholder="e.g. 380001"
                 required
-                className="w-full pl-9 pr-10 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm font-semibold tracking-wider text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full pl-9 pr-10 py-2.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wider text-stone-900 transition-all ${
+                  isPincodeInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {pincodeLoading && <Loader2 className="w-4 h-4 text-[#700b10] animate-spin" />}
-                {pincodeSuccess && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                {pincodeError && <AlertCircle className="w-4 h-4 text-amber-500" />}
+                {pincodeSuccess && !isPincodeInvalid && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                {pincodeError && !isPincodeInvalid && <AlertCircle className="w-4 h-4 text-amber-500" />}
               </div>
             </div>
-            {pincodeSuccess && (
+            {isPincodeInvalid ? (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.pincode}</span>
+              </p>
+            ) : pincodeSuccess ? (
               <p className="text-[11px] text-emerald-700 mt-1 font-medium flex items-center gap-1">
                 ✓ Verified delivery area: {shippingAddress.city}, {shippingAddress.state}
               </p>
-            )}
-            {pincodeError && (
+            ) : pincodeError ? (
               <p className="text-[11px] text-amber-600 mt-1 font-medium">{pincodeError}</p>
-            )}
+            ) : null}
           </div>
 
           {/* Address Line 1 */}
@@ -288,13 +315,25 @@ export default function CheckoutShippingStep({
             </label>
             <input
               type="text"
+              id="checkout-address1"
               name="address1"
               value={shippingAddress.address1 || ""}
               onChange={handleChange}
+              onBlur={() => handleBlur("address1")}
               placeholder="e.g. Flat 402, Sunshine Heights"
               required
-              className="w-full px-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+              className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                isAddress1Invalid
+                  ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                  : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+              }`}
             />
+            {isAddress1Invalid && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.address1}</span>
+              </p>
+            )}
           </div>
 
           {/* Address Line 2 */}
@@ -320,13 +359,25 @@ export default function CheckoutShippingStep({
               </label>
               <input
                 type="text"
+                id="checkout-city"
                 name="city"
                 value={shippingAddress.city || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("city")}
                 placeholder="e.g. Ahmedabad"
                 required
-                className="w-full px-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                  isCityInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
+              {isCityInvalid && (
+                <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.city}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -335,13 +386,25 @@ export default function CheckoutShippingStep({
               </label>
               <input
                 type="text"
+                id="checkout-state"
                 name="state"
                 value={shippingAddress.state || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("state")}
                 placeholder="e.g. Gujarat"
                 required
-                className="w-full px-3 py-2.5 bg-stone-50/50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10] transition-all"
+                className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-stone-900 transition-all ${
+                  isStateInvalid
+                    ? "bg-rose-50/30 border border-rose-400 focus:bg-white focus:outline-hidden focus:border-rose-600 focus:ring-1 focus:ring-rose-600"
+                    : "bg-stone-50/50 border border-stone-300 focus:bg-white focus:outline-hidden focus:border-[#700b10] focus:ring-1 focus:ring-[#700b10]"
+                }`}
               />
+              {isStateInvalid && (
+                <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1 animate-fadeIn">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.state}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -435,36 +498,38 @@ export default function CheckoutShippingStep({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBackStep}
-          className="text-stone-600 hover:text-stone-900 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back to Contact</span>
-        </button>
+      {/* Action Buttons (only shown in multi-step mode) */}
+      {!isOneStep && (
+        <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBackStep}
+            className="text-stone-600 hover:text-stone-900 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back to Contact</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={handleProceed}
-          disabled={!isFormValid || loading || savingNew}
-          className="bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3 px-6 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
-        >
-          {savingNew ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Saving Address…</span>
-            </>
-          ) : (
-            <>
-              <span>Proceed to Payment</span>
-              <ChevronRight className="w-4 h-4" />
-            </>
-          )}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleProceed}
+            disabled={!isFormValid || loading || savingNew}
+            className="bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3 px-6 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
+          >
+            {savingNew ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Saving Address…</span>
+              </>
+            ) : (
+              <>
+                <span>Proceed to Payment</span>
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

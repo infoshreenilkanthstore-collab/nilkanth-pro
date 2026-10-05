@@ -135,10 +135,22 @@ export default function WishlistDrawer({ onNavigate, onSelectProduct, onOpenAuth
               <div className="space-y-3">
                 {wishlistItems.map((item) => {
                   const product = item.product || item;
-                  const title = product.title || "Spiritual Product";
+                  const title =
+                    product.title ||
+                    product.name ||
+                    product.product_title ||
+                    item.title ||
+                    item.name ||
+                    item.product_title ||
+                    "Spiritual Product";
                   const image =
                     product.image_url ||
+                    product.image ||
                     product.images?.[0]?.url ||
+                    product.images?.[0]?.src ||
+                    product.images?.[0] ||
+                    item.image_url ||
+                    item.image ||
                     "https://megaecomm.megascale.co.in/backend/media/16/general/66066c8ca3ab4a8cc35413b3a26e3314.jpeg";
                   const rawPrice =
                     product.priceRange?.minVariantPrice?.amount ??
@@ -154,12 +166,13 @@ export default function WishlistDrawer({ onNavigate, onSelectProduct, onOpenAuth
                     product.variants?.[0]?.compareAtPrice?.amount ??
                     product.variants?.[0]?.compare_at_price ??
                     product.variants?.[0]?.compareAtPrice ??
+                    item.compare_at_price ??
                     0
                   );
                   const itemId = item.id || item.product_id || product.id;
                   const isRemoving = removingId === itemId;
 
-                  const handle = product.handle || product.slug || product.id || item.product_id;
+                  const handle = product.handle || product.slug || item.handle || item.slug || product.id || item.product_id;
                   const productUrl = `/products/${handle}`;
 
                   return (
