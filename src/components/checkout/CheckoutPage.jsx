@@ -12,6 +12,7 @@ import {
   fetchStoreInfo,
   validateCoupon,
   syncAbandonedCheckout,
+  recoverAbandonedCheckout,
   addCustomerAddress,
   initiatePayment,
   verifyPayment,
@@ -43,7 +44,7 @@ export default function CheckoutPage({
   onOpenAuthModal,
   onOrderCompleted,
 }) {
-  const { cartItems, cartTotal, clearCart: clearCartContext, updateQuantity } = useCart();
+  const { cartItems, cartTotal, clearCart: clearCartContext, updateQuantity, restoreCartItems } = useCart();
 
   // Current Checkout Step: 1 = Contact/Customer, 2 = Shipping, 3 = Payment
   const [currentStep, setCurrentStep] = useState(1);
@@ -57,8 +58,14 @@ export default function CheckoutPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Session ID for abandoned cart tracking
-  const [sessionId] = useState(() => {
+  // Session ID for abandoned cart tracking (checking query params first)
+  const [sessionId, setSessionId] = useState(() => {
+    const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlSid = urlParams ? (urlParams.get("session_id") || urlParams.get("sessionId")) : null;
+    if (urlSid) {
+      sessionStorage.setItem("nilkanth_checkout_session_id", urlSid);
+      return urlSid;
+    }
     let sid = sessionStorage.getItem("nilkanth_checkout_session_id");
     if (!sid) {
       sid = "session_chk_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
@@ -66,6 +73,14 @@ export default function CheckoutPage({
     }
     return sid;
   });
+
+  // Recovery States
+  const [recoveringSession, setRecoveringSession] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    return Boolean(urlParams.get("session_id") || urlParams.get("sessionId"));
+  });
+  const [recoveryStatus, setRecoveryStatus] = useState(null);
 
   // Customer Contact Info
   const [customer, setCustomer] = useState(() => ({
@@ -340,6 +355,87 @@ export default function CheckoutPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
+  // ── Recover Abandoned Checkout Session from URL query param (?session_id=... or ?sessionId=...) ──
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetSessionId = urlParams.get("session_id") || urlParams.get("sessionId");
+
+    if (!targetSessionId) return;
+
+    setRecoveringSession(true);
+    recoverAbandonedCheckout(targetSessionId)
+      .then((res) => {
+        if (res.success && res.data) {
+          const d = res.data;
+          // 1. Session ID & Synced Order ID
+          if (d.sessionId) {
+            setSessionId(d.sessionId);
+            sessionStorage.setItem("nilkanth_checkout_session_id", d.sessionId);
+          }
+          if (d.orderId || d.id) {
+            setSyncedOrderId(d.orderId || d.id);
+          }
+
+          // 2. Customer Contact Info
+          const contact = d.contact || d.customer || {};
+          const fName = contact.firstName || (contact.name ? contact.name.split(" ")[0] : "") || d.first_name || "";
+          const lName = contact.lastName || (contact.name ? contact.name.split(" ").slice(1).join(" ") : "") || d.last_name || "";
+          const cPhone = contact.phone || d.customerPhone || d.phone || "";
+          const cEmail = contact.email || d.customerEmail || d.email || "";
+
+          setCustomer((prev) => ({
+            firstName: fName || prev.firstName,
+            lastName: lName || prev.lastName,
+            phone: cPhone || prev.phone,
+            email: cEmail || prev.email,
+          }));
+
+          // 3. Shipping Address Info
+          const ship = d.shippingAddress || d.shipping_address || {};
+          setShippingAddress((prev) => ({
+            address1: ship.line1 || ship.address1 || prev.address1,
+            address2: ship.line2 || ship.address2 || prev.address2,
+            city: ship.city || prev.city,
+            state: ship.state || prev.state,
+            pincode: ship.pincode || prev.pincode,
+            country: ship.country || prev.country || "India",
+          }));
+
+          // 4. Cart Items Recovery
+          if (Array.isArray(d.items) && d.items.length > 0 && typeof restoreCartItems === "function") {
+            restoreCartItems(d.items);
+          }
+
+          // 5. Applied Discount Info
+          if (d.discountAmount !== undefined && Number(d.discountAmount) > 0) {
+            setDiscountAmount(Number(d.discountAmount));
+          }
+          if (d.discountCode) {
+            setDiscountCode(d.discountCode);
+          }
+
+          setRecoveryStatus({
+            success: true,
+            message: res.message || "Abandoned checkout session recovered successfully!",
+          });
+        } else {
+          setRecoveryStatus({
+            success: false,
+            message: res.message || "Could not find an active checkout session for this link.",
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Checkout recovery error:", err);
+        setRecoveryStatus({
+          success: false,
+          message: "Failed to recover abandoned checkout session.",
+        });
+      })
+      .finally(() => {
+        setRecoveringSession(false);
+      });
+  }, [restoreCartItems]);
 
   // Load Active Gateways
   useEffect(() => {
@@ -906,6 +1002,21 @@ export default function CheckoutPage({
     }
   };
 
+  // If we are currently recovering a session from URL, show an elegant spinner
+  if (recoveringSession) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center font-nunito bg-[#fcfaf7]">
+        <div className="w-12 h-12 border-3 border-stone-200 border-t-[#700b10] rounded-full animate-spin mb-4" />
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 mb-2">
+          Restoring Your Checkout Session...
+        </h2>
+        <p className="text-stone-500 text-xs sm:text-sm max-w-sm">
+          Please wait while we retrieve your selected items and address details.
+        </p>
+      </div>
+    );
+  }
+
   // If cart is completely empty, direct back to shop
   if (!cartItems || cartItems.length === 0) {
     return (
@@ -948,6 +1059,39 @@ export default function CheckoutPage({
             <span className="sm:hidden">100% Secure Checkout</span>
           </div>
         </div>
+
+        {/* Abandoned Recovery Status Alert */}
+        {recoveryStatus && (
+          <div
+            className={`mb-6 p-4 rounded-2xl border flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm font-semibold transition-all shadow-sm animate-fadeIn ${
+              recoveryStatus.success
+                ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+                : "bg-amber-50/90 border-amber-200 text-amber-900"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">{recoveryStatus.success ? "✨" : "ℹ️"}</span>
+              <div>
+                <p className="font-bold">
+                  {recoveryStatus.success
+                    ? "Checkout Session Recovered"
+                    : "Checkout Session Notice"}
+                </p>
+                <p className="text-xs opacity-90 font-normal mt-0.5">
+                  {recoveryStatus.message}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRecoveryStatus(null)}
+              className="text-stone-400 hover:text-stone-700 text-xs px-2 py-1 rounded cursor-pointer"
+              aria-label="Dismiss notice"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

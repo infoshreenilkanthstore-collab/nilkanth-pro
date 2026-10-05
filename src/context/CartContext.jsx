@@ -265,6 +265,37 @@ export function CartProvider({ children }) {
 
 
 
+  // Restore Cart Items from Abandoned Checkout Session
+  const restoreCartItems = useCallback((items) => {
+    if (!Array.isArray(items) || items.length === 0) return;
+    const formattedItems = items.map((it, idx) => {
+      const pId = it.productId || it.product_id || it.id;
+      const vId = it.variantId || it.variant_id || null;
+      const priceNum = Number(it.price) || 0;
+      const qtyNum = Number(it.quantity) || 1;
+      return {
+        id: it.cart_item_id || it.id || vId || pId || idx,
+        cart_item_id: it.cart_item_id || it.id || vId || idx,
+        product_id: pId,
+        productId: pId,
+        variant_id: vId,
+        variantId: vId,
+        title: it.title || it.product_title || it.name || "Item",
+        price: priceNum,
+        quantity: qtyNum,
+        image: it.image || it.featured_image || it.images?.[0] || "",
+        total: Number(it.total) || (priceNum * qtyNum),
+      };
+    });
+    const totalAmount = formattedItems.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+    const count = formattedItems.reduce((sum, it) => sum + it.quantity, 0);
+    setCart({
+      items: formattedItems,
+      total_amount: totalAmount.toFixed(2),
+      item_count: count,
+    });
+  }, []);
+
   // Clear Cart
   const clearCart = useCallback(async () => {
     setLoading(true);
@@ -296,6 +327,7 @@ export function CartProvider({ children }) {
     removeItem,
     clearCart,
     refreshCart,
+    restoreCartItems,
     shippingRate,
     shippingLoading,
     calculateShippingRate,

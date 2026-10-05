@@ -1338,6 +1338,84 @@ export async function syncAbandonedCheckout(payload) {
 }
 
 /**
+ * Recover Abandoned Checkout Session (Step 0: GET /checkout/abandoned/recover?sessionId=... or /checkout/abandoned/:sessionId)
+ */
+export async function recoverAbandonedCheckout(sessionId) {
+  if (!sessionId) return { success: false, message: "Missing sessionId" };
+
+  try {
+    const customerToken = localStorage.getItem("customer_token");
+    const h = {
+      "Content-Type": "application/json",
+      "X-Shopfront-Token": API_TOKEN,
+      Accept: "application/json",
+    };
+    if (customerToken) {
+      h["Authorization"] = `Bearer ${customerToken}`;
+    }
+
+    const encodedSid = encodeURIComponent(sessionId);
+
+    // 1. Try GET /checkout/abandoned/recover?session_id=...&sessionId=...
+    let res = await fetch(`${API_BASE}/checkout/abandoned/recover?session_id=${encodedSid}&sessionId=${encodedSid}`, {
+      headers: h,
+    }).catch(() => null);
+
+    let data = res && res.ok ? await res.json().catch(() => null) : null;
+
+    // 2. Try GET /checkout/abandoned/:sessionId
+    if (!data || data.success === false || !data.data) {
+      res = await fetch(`${API_BASE}/checkout/abandoned/${encodedSid}`, {
+        headers: h,
+      }).catch(() => null);
+      if (res && res.ok) {
+        data = await res.json().catch(() => null);
+      }
+    }
+
+    // 3. Try GET /checkout/abandoned/session/:sessionId
+    if (!data || data.success === false || !data.data) {
+      res = await fetch(`${API_BASE}/checkout/abandoned/session/${encodedSid}`, {
+        headers: h,
+      }).catch(() => null);
+      if (res && res.ok) {
+        data = await res.json().catch(() => null);
+      }
+    }
+
+    // 4. Try POST /checkout/abandoned/recover
+    if (!data || data.success === false || !data.data) {
+      res = await fetch(`${API_BASE}/checkout/abandoned/recover`, {
+        method: "POST",
+        headers: h,
+        body: JSON.stringify({ sessionId, session_id: sessionId }),
+      }).catch(() => null);
+      if (res && res.ok) {
+        data = await res.json().catch(() => null);
+      }
+    }
+
+    if (data && (data.success !== false || data.status === "recovered" || data.data)) {
+      return {
+        success: true,
+        status: data.status || "recovered",
+        message: data.message || "Abandoned checkout session recovered successfully",
+        data: data.data || data,
+      };
+    }
+
+    return {
+      success: false,
+      message: data?.message || "Failed to recover abandoned checkout session",
+      data: null,
+    };
+  } catch (err) {
+    console.error("Error recovering abandoned checkout session:", err);
+    return { success: false, message: err.message || "Network error while recovering checkout" };
+  }
+}
+
+/**
  * Initiate Payment (Step 2 of checkout: Razorpay, ICICI, Easebuzz, COD)
  */
 // export async function initiatePayment({
