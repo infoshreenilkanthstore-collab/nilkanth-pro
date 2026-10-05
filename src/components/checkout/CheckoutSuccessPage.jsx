@@ -130,7 +130,7 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
         {/* Support & Next Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <a
-            href="https://wa.me/918999123868?text=Hello%20Nilkanth%20Store%2C%20I%20have%20an%20inquiry%20regarding%20my%20Order"
+            href="https://wa.me/919726778118?text=Hello%20Nilkanth%20Store%2C%20I%20have%20an%20inquiry%20regarding%20my%20Order"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3.5 px-6 rounded-full transition-colors shadow-xs"
