@@ -30,15 +30,15 @@ export default function CheckoutPaymentStep({
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-7 shadow-xs">
       <div className="flex items-center justify-between pb-4 border-b border-stone-100 mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 sm:mt-0">
             3
           </div>
           <div>
-            <h2 className="font-serif text-lg font-bold text-stone-900 leading-tight">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-stone-900 leading-tight">
               Payment Method &amp; Confirmation
             </h2>
-            <p className="text-xs text-stone-500 font-sans">
+            <p className="text-[11px] sm:text-xs text-stone-500 font-sans mt-0.5">
               Choose your preferred encrypted gateway or Cash on Delivery.
             </p>
           </div>
@@ -63,11 +63,10 @@ export default function CheckoutPaymentStep({
             <label
               key={gw.provider}
               onClick={() => onSelectProvider(gw.provider)}
-              className={`block p-4 rounded-xl border cursor-pointer transition-all ${
-                isSelected
+              className={`block p-4 rounded-xl border cursor-pointer transition-all ${isSelected
                   ? "border-[#700b10] bg-amber-50/40 ring-1 ring-[#700b10]"
                   : "border-stone-200 hover:border-stone-300 bg-white"
-              }`}
+                }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
@@ -106,9 +105,8 @@ export default function CheckoutPaymentStep({
 
                 <div className="flex items-center mt-1">
                   <div
-                    className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
-                      isSelected ? "border-[#700b10] bg-[#700b10]" : "border-stone-300"
-                    }`}
+                    className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${isSelected ? "border-[#700b10] bg-[#700b10]" : "border-stone-300"
+                      }`}
                   >
                     {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
@@ -126,7 +124,7 @@ export default function CheckoutPaymentStep({
           <span>Nilkanth Store Trust &amp; Safety Protocol</span>
         </div>
         <p className="text-[11px] text-stone-500 leading-relaxed">
-          By clicking Complete Payment, your encrypted transaction is protected under RBI-compliant gateway standards. Order tracking and receipt will be dispatched via SMS &amp; Email immediately.
+          By clicking Complete Payment, your encrypted transaction is protected under RBI-compliant gateway standards. Order tracking and receipt will be dispatched via Whatsapp &amp; Email immediately.
         </p>
       </div>
 

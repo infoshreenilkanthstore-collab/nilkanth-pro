@@ -81,6 +81,8 @@ export default function AuthModal({
     }
   };
 
+  const [storeSenderNumber, setStoreSenderNumber] = useState("+91 93105 01040");
+
   // Submit Phone Number to Send OTP via WhatsApp
   const handleSendOtp = async (e) => {
     e?.preventDefault();
@@ -97,6 +99,9 @@ export default function AuthModal({
     setLoading(false);
 
     if (res.success) {
+      if (res.data?.sender_number || res.data?.sender || res.sender) {
+        setStoreSenderNumber(res.data.sender_number || res.data.sender || res.sender);
+      }
       setStep("OTP");
       setResendTimer(30);
       setOtp(["", "", "", "", "", ""]);
@@ -188,7 +193,7 @@ export default function AuthModal({
 
       {/* Main Dialog Card with Desktop Spiritual Poster + Clean Sign-In Form */}
       <div className="relative w-full max-w-md md:max-w-[860px] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-amber-100 z-10 animate-scaleUp flex flex-col md:flex-row max-h-[90dvh] md:min-h-[480px]">
-        
+
         {/* Close Button */}
         <button
           type="button"
@@ -212,7 +217,7 @@ export default function AuthModal({
 
         {/* RIGHT COLUMN: Interactive Form Content */}
         <div className="w-full md:w-[55%] bg-white p-5 sm:p-7 md:p-8 flex flex-col justify-between overflow-y-auto">
-          
+
           {/* STEP 1: Enter Phone Number */}
           {step === "PHONE" && (
             <div className="flex-1 flex flex-col justify-center">
@@ -230,7 +235,7 @@ export default function AuthModal({
                   <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 font-nunito">
                     Phone Number
                   </label>
-                  
+
                   {/* Phone input with +91 country prefix badge */}
                   <div className="flex items-center border border-stone-300 focus-within:border-[#700b10] focus-within:ring-2 focus-within:ring-[#700b10]/15 rounded-xl transition-all bg-white overflow-hidden shadow-2xs">
                     <div className="px-3 py-2.5 sm:px-3.5 sm:py-3 bg-stone-50/90 border-r border-stone-200 flex items-center gap-1.5 text-stone-700 font-bold text-xs sm:text-sm select-none">
@@ -248,6 +253,19 @@ export default function AuthModal({
                       className="w-full px-3 py-2.5 sm:px-3.5 sm:py-3 outline-none text-stone-900 placeholder-stone-300 text-sm sm:text-base font-semibold tracking-wider font-nunito"
                     />
                   </div>
+
+                  {/* Dynamic WhatsApp Destination Number Indicator */}
+                  {phoneNumber.length > 0 && (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200/80 flex items-center gap-2 text-xs text-emerald-900 font-nunito animate-fadeIn">
+                      <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        OTP will be sent to WhatsApp:{" "}
+                        <strong className="text-emerald-950 font-bold font-mono">
+                          +91 {phoneNumber.length >= 5 ? `${phoneNumber.slice(0, 5)} ${phoneNumber.slice(5)}` : phoneNumber}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
 
                   {/* Error Notification */}
                   {errorMessage && (
@@ -274,10 +292,19 @@ export default function AuthModal({
                 </button>
               </form>
 
-              {/* WhatsApp Notification Badge */}
-              <div className="mt-3 flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-emerald-700 font-medium bg-emerald-50/70 border border-emerald-200/50 py-1.5 px-3 rounded-lg">
-                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Instant OTP delivered straight to your WhatsApp</span>
+              {/* WhatsApp Sender Store Number Alert Box */}
+              <div className="mt-3.5 p-3 rounded-xl bg-emerald-50/90 border border-emerald-200/80 text-xs text-emerald-950 font-nunito space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Official WhatsApp Sender Info</span>
+                </div>
+                <p className="text-[11px] sm:text-[11.5px] text-emerald-800 leading-snug">
+                  You will receive the OTP message from our official WhatsApp number:{" "}
+                  <strong className="text-emerald-950 font-mono font-bold bg-white/90 px-1.5 py-0.5 rounded border border-emerald-300 inline-block">
+                    {storeSenderNumber}
+                  </strong>{" "}
+                  (Shree Nilkanth Store).
+                </p>
               </div>
             </div>
           )}
@@ -285,24 +312,40 @@ export default function AuthModal({
           {/* STEP 2: Enter 6-Digit OTP */}
           {step === "OTP" && (
             <div className="flex-1 flex flex-col justify-center animate-fadeIn">
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-4 sm:mb-5">
                 <h3 className="font-tenor text-xl sm:text-2xl md:text-3xl text-stone-900 tracking-tight font-medium">
                   Enter Verification Code
                 </h3>
-                <p className="text-stone-500 text-xs sm:text-sm mt-1 font-nunito">
-                  We sent a 6-digit code via WhatsApp to{" "}
-                  <strong className="text-stone-900">+91 {phoneNumber}</strong>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep("PHONE");
-                      setErrorMessage("");
-                    }}
-                    className="ml-2 text-[#700b10] hover:underline font-bold text-xs"
-                  >
-                    Edit
-                  </button>
-                </p>
+
+                {/* Number & Store Sender Details Banner */}
+                <div className="mt-3 p-3 rounded-xl bg-emerald-50/90 border border-emerald-200/80 text-xs font-nunito space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-stone-600 font-semibold">
+                      OTP Sent To:{" "}
+                      <strong className="text-stone-900 font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-stone-200">
+                        +91 {phoneNumber.slice(0, 5)} {phoneNumber.slice(5)}
+                      </strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep("PHONE");
+                        setErrorMessage("");
+                      }}
+                      className="text-[#700b10] hover:underline font-bold text-xs cursor-pointer"
+                    >
+                      (Change Number)
+                    </button>
+                  </div>
+
+                  <div className="pt-1.5 border-t border-emerald-200/60 text-[11px] sm:text-[11.5px] text-emerald-900 leading-snug">
+                    📲 <strong>Incoming Message Sender:</strong> Check your WhatsApp for message from{" "}
+                    <strong className="font-mono text-emerald-950 font-bold bg-white px-1.5 py-0.5 rounded border border-emerald-300">
+                      {storeSenderNumber}
+                    </strong>{" "}
+                    (Shree Nilkanth Store).
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleVerifyOtp} className="space-y-4">

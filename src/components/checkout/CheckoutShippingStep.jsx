@@ -174,15 +174,15 @@ export default function CheckoutShippingStep({
     <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-7 shadow-xs">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-stone-100 mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 sm:mt-0">
             2
           </div>
           <div>
-            <h2 className="font-serif text-lg font-bold text-stone-900 leading-tight">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-stone-900 leading-tight">
               Shipping &amp; Delivery Destination
             </h2>
-            <p className="text-xs text-stone-500 font-sans">
+            <p className="text-[11px] sm:text-xs text-stone-500 font-sans mt-0.5">
               Select a saved address or add a new delivery address.
             </p>
           </div>

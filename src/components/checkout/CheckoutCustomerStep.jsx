@@ -41,16 +41,16 @@ export default function CheckoutCustomerStep({
 
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-7 shadow-xs">
-      <div className="flex items-center justify-between pb-4 border-b border-stone-100 mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs">
+      <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-stone-100 mb-6">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-full bg-amber-50 text-[#700b10] border border-amber-200 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 sm:mt-0">
             1
           </div>
-          <div>
-            <h2 className="font-serif text-lg font-bold text-stone-900 leading-tight">
+          <div className="min-w-0">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-stone-900 leading-tight">
               Customer Contact &amp; Identity
             </h2>
-            <p className="text-xs text-stone-500 font-sans">
+            <p className="text-[11px] sm:text-xs text-stone-500 font-sans mt-0.5 leading-snug">
               Provide your details for order confirmation receipts &amp; dispatch tracking.
             </p>
           </div>
@@ -60,9 +60,9 @@ export default function CheckoutCustomerStep({
           <button
             type="button"
             onClick={onOpenAuthModal}
-            className="text-xs font-bold text-[#700b10] hover:underline flex items-center gap-1 cursor-pointer"
+            className="shrink-0 whitespace-nowrap text-xs font-bold text-[#700b10] hover:text-[#54060b] bg-amber-50/80 hover:bg-amber-100 border border-amber-200/80 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95"
           >
-            <Lock className="w-3.5 h-3.5" />
+            <Lock className="w-3.5 h-3.5 text-[#700b10] shrink-0" />
             <span>Sign In</span>
           </button>
         )}
