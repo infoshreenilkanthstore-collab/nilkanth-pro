@@ -28,7 +28,7 @@ export default function FloatingActions() {
         </button>
       )}
       <a
-        href="https://wa.me/919726778118?text=Welcome%20to%20Shri%20Nilkanth%20Store%2C%20How%20can%20I%20help%20you%3F"
+        href="https://api.whatsapp.com/send/?phone=919726778118&text=Hello%21+I+would+like+to+inquire+about+your+products.&type=phone_number&app_absent=0&utm_source=chatgpt.com"
         target="_blank"
         rel="noopener noreferrer"
         className="w-10 h-10 md:w-12 md:h-12 bg-[#25D366] text-white rounded-full shadow-xl flex items-center justify-center hover:bg-[#128C7E] transition-all transform hover:scale-105"
