@@ -106,7 +106,7 @@ export default function CheckoutPage({
 
   // Gateways & Shipping Rates
   const [gateways, setGateways] = useState([]);
-  const [selectedProvider, setSelectedProvider] = useState("razorpay");
+  const [selectedProvider, setSelectedProvider] = useState("");
   const [shippingRates, setShippingRates] = useState([]);
   const [selectedShippingRate, setSelectedShippingRate] = useState(null);
 
@@ -444,6 +444,9 @@ export default function CheckoutPage({
         setGateways(res.data);
         const defaultGw = res.data.find((g) => g.provider === "razorpay") || res.data[0];
         if (defaultGw) setSelectedProvider(defaultGw.provider);
+      } else {
+        setGateways([]);
+        setSelectedProvider("");
       }
     });
   }, []);

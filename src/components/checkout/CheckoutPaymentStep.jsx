@@ -3,7 +3,7 @@ import { CreditCard, ShieldCheck, ChevronLeft, Lock, Loader2, Banknote, Building
 
 export default function CheckoutPaymentStep({
   gateways = [],
-  selectedProvider = "razorpay",
+  selectedProvider = "",
   onSelectProvider,
   grandTotal = 0,
   isPlacingOrder = false,
@@ -54,7 +54,12 @@ export default function CheckoutPaymentStep({
 
       {/* Gateway Options */}
       <div className="space-y-3">
-        {gateways.map((gw) => {
+        {gateways.length === 0 ? (
+          <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl text-center text-xs text-stone-500">
+            No payment methods are currently available.
+          </div>
+        ) : (
+          gateways.map((gw) => {
           const isSelected = selectedProvider === gw.provider;
           const isCod = gw.provider === "cod";
           const isTestMode = gw.is_test_mode;
@@ -114,7 +119,8 @@ export default function CheckoutPaymentStep({
               </div>
             </label>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Security & Guarantee Note */}
@@ -145,7 +151,7 @@ export default function CheckoutPaymentStep({
         <button
           type="button"
           onClick={onPlaceOrder}
-          disabled={isPlacingOrder}
+          disabled={isPlacingOrder || !selectedProvider || gateways.length === 0}
           className="w-full sm:w-auto bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3.5 px-8 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
         >
           {isPlacingOrder ? (

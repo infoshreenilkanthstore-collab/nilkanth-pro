@@ -1086,50 +1086,16 @@ export async function fetchPaymentGateways() {
     if (res.ok && data.success !== false && Array.isArray(data.data)) {
       return { success: true, data: data.data };
     }
-    // Fallback if empty or failed
     return {
-      success: true,
-      data: [
-        {
-          provider: "razorpay",
-          name: "Razorpay Secure Checkout",
-          display_title: "Razorpay (Cards, UPI, Netbanking, Wallets)",
-          is_test_mode: true,
-          public_credentials: { key_id: "rzp_test_1234567890abcdef" },
-          metadata: { icon: "razorpay", description: "Pay securely via UPI, Credit/Debit Cards, NetBanking" },
-        },
-        {
-          provider: "cod",
-          name: "Cash on Delivery",
-          display_title: "Cash on Delivery (COD)",
-          is_test_mode: false,
-          public_credentials: {},
-          metadata: { icon: "cod", min_order_amount: 0, max_order_amount: 50000, extra_fee: 0, instructions: "Pay cash upon delivery." },
-        },
-      ],
+      success: false,
+      data: [],
+      message: data?.message || "No payment gateways returned by server",
     };
   } catch (err) {
     console.error("Error fetching payment gateways:", err);
     return {
       success: false,
-      data: [
-        {
-          provider: "razorpay",
-          name: "Razorpay Secure Checkout",
-          display_title: "Razorpay (Cards, UPI, Netbanking, Wallets)",
-          is_test_mode: true,
-          public_credentials: {},
-          metadata: { icon: "razorpay", description: "Pay securely via UPI, Cards, NetBanking" },
-        },
-        {
-          provider: "cod",
-          name: "Cash on Delivery",
-          display_title: "Cash on Delivery (COD)",
-          is_test_mode: false,
-          public_credentials: {},
-          metadata: { icon: "cod", instructions: "Pay cash upon delivery." },
-        },
-      ],
+      data: [],
       message: err.message,
     };
   }
