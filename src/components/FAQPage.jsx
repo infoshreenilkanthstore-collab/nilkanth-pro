@@ -130,7 +130,7 @@ export default function FAQPage({ onNavigate }) {
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
               <a
-                href="https://wa.me/919726778118?text=Welcome%20to%20Shri%20Nilkanth%20Store%2C%20How%20can%20I%20help%20you%3F"
+                href="https://api.whatsapp.com/send/?phone=919726778118&text=Hello%21+I+would+like+to+inquire+about+your+products.&type=phone_number&app_absent=0"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-[#ebd99c] hover:text-white px-4 py-2.5 rounded-xl border border-white/15 transition-all font-semibold"
