@@ -664,7 +664,25 @@ export async function fetchWishlist() {
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data : (data.data || []);
+    const rawList = Array.isArray(data) ? data : (data.data || []);
+    return rawList.filter((item) => {
+      if (!item) return false;
+      const prod = item.product || item;
+
+      // Check is_active field
+      const isActive = item.is_active !== undefined ? item.is_active : prod.is_active;
+      if (isActive !== undefined && (isActive === false || isActive === 0 || isActive === "0" || isActive === "false")) {
+        return false;
+      }
+
+      // Check product_status and status fields
+      const pStatus = (item.product_status || prod.product_status || item.status || prod.status)?.toString().toLowerCase();
+      if (pStatus && pStatus !== "active") {
+        return false;
+      }
+
+      return true;
+    });
   } catch (err) {
     console.error("Error fetching wishlist:", err);
     return [];

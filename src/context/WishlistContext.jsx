@@ -4,12 +4,31 @@ import { fetchWishlist, toggleWishlistItem, deleteWishlistItem, fetchProductById
 const WishlistContext = createContext(null);
 const GUEST_WISHLIST_KEY = "nilkanth_guest_wishlist";
 
+function isProductActive(item) {
+  if (!item) return false;
+  const prod = item.product || item;
+
+  // Check is_active flag
+  const isActive = item.is_active !== undefined ? item.is_active : prod.is_active;
+  if (isActive !== undefined && (isActive === false || isActive === 0 || isActive === "0" || isActive === "false")) {
+    return false;
+  }
+
+  // Check product_status and status fields
+  const pStatus = (item.product_status || prod.product_status || item.status || prod.status)?.toString().toLowerCase();
+  if (pStatus && pStatus !== "active") {
+    return false;
+  }
+
+  return true;
+}
+
 function getGuestWishlist() {
   try {
     const raw = localStorage.getItem(GUEST_WISHLIST_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed.filter(isProductActive) : [];
     }
   } catch (e) {
     console.error("Error reading guest wishlist:", e);
@@ -19,7 +38,8 @@ function getGuestWishlist() {
 
 function saveGuestWishlist(items) {
   try {
-    localStorage.setItem(GUEST_WISHLIST_KEY, JSON.stringify(items));
+    const activeOnly = (items || []).filter(isProductActive);
+    localStorage.setItem(GUEST_WISHLIST_KEY, JSON.stringify(activeOnly));
   } catch (e) {
     console.error("Error saving guest wishlist:", e);
   }
@@ -166,7 +186,8 @@ export function WishlistProvider({ children, currentUser, onOpenAuth }) {
         })
       );
 
-      setWishlistItems(enrichedList);
+      const activeList = enrichedList.filter(isProductActive);
+      setWishlistItems(activeList);
     } catch (err) {
       console.error("Error loading wishlist:", err);
     } finally {
