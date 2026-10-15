@@ -758,6 +758,9 @@ export default function CheckoutPage({
       financial_status: paymentStatus,
     };
 
+    // Save to sessionStorage for page reload resilience
+    sessionStorage.setItem("nilkanth_last_placed_order", JSON.stringify(confirmedOrder));
+
     // 4. Fire GA4 purchase + Meta Pixel Purchase tracking
     trackPurchase(confirmedOrder);
 
@@ -939,6 +942,9 @@ export default function CheckoutPage({
             setIsPlacingOrder(false);
           },
           modal: {
+            backdropclose: false,
+            escape: false,
+            handleback: true,
             ondismiss: function () {
               setIsPlacingOrder(false);
             },
@@ -957,6 +963,7 @@ export default function CheckoutPage({
           const form = document.createElement("form");
           form.method = "POST";
           form.action = gatewayData.service_url;
+          form.target = "_self"; // Strictly on the same page/tab
           Object.entries(gatewayData.form_payload).forEach(([k, v]) => {
             const input = document.createElement("input");
             input.type = "hidden";
@@ -967,7 +974,7 @@ export default function CheckoutPage({
           document.body.appendChild(form);
           form.submit();
         } else if (gatewayData.payment_url) {
-          window.location.href = gatewayData.payment_url;
+          window.location.assign(gatewayData.payment_url);
         } else {
           setErrorMessage("ICICI Eazypay gateway URL not returned.");
           setIsPlacingOrder(false);
@@ -978,8 +985,97 @@ export default function CheckoutPage({
       // Case C: Easebuzz
       // -----------------------------
       else if (selectedProvider === "easebuzz") {
-        if (gatewayData.checkout_url) {
-          window.location.href = gatewayData.checkout_url;
+        const accessKey =
+          gatewayData.access_key ||
+          gatewayData.data?.access_key ||
+          (typeof gatewayData.data === "string" ? gatewayData.data : "") ||
+          (gatewayData.checkout_url ? gatewayData.checkout_url.split("/").filter(Boolean).pop() : "");
+
+        const easebuzzKey =
+          gatewayData.key ||
+          gatewayData.key_id ||
+          gatewayData.merchant_key ||
+          gateways.find((g) => g.provider === "easebuzz")?.metadata?.key ||
+          "";
+
+        const isTestMode =
+          gatewayData.is_test_mode ||
+          gatewayData.checkout_url?.includes("testpay") ||
+          gateways.find((g) => g.provider === "easebuzz")?.is_test_mode;
+        const easebuzzEnv = isTestMode ? "test" : "prod";
+
+        let sdkLoaded = false;
+        try {
+          sdkLoaded = await loadExternalScript(
+            "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/v2.0.0/easebuzz-checkout-v2.0.0.js"
+          );
+        } catch (e) {
+          try {
+            sdkLoaded = await loadExternalScript(
+              "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/easebuzz-checkout.js"
+            );
+          } catch (e2) {
+            sdkLoaded = false;
+          }
+        }
+
+        if (sdkLoaded && window.EasebuzzCheckout && accessKey) {
+          const easebuzzCheckout = new window.EasebuzzCheckout(easebuzzKey || "EASEBUZZ", easebuzzEnv);
+          const ebzOptions = {
+            access_key: accessKey,
+            onResponse: async (response) => {
+              const isSuccess =
+                response &&
+                (response.status === "success" ||
+                  response.status === "successful" ||
+                  response.status === "userApproved");
+
+              if (isSuccess) {
+                const verifyPayload = {
+                  provider: "easebuzz",
+                  order_id: orderId,
+                  payment_id: gatewayData.payment_id || 0,
+                  status: response.status || "success",
+                  txnid: response.txnid || gatewayData.txnid || "",
+                  amount: String(grandTotal.toFixed(2)),
+                  firstname: customerPayload.firstName,
+                  email: customerPayload.email,
+                  phone: customerPayload.phone,
+                  productinfo: productInfoStr,
+                  hash: response.hash || "",
+                  easepayid: response.easepayid || "",
+                };
+
+                const verifyRes = await verifyPayment(verifyPayload);
+
+                if (verifyRes.success) {
+                  await finalizeOfficialOrder({
+                    abandonedCheckoutId: orderId,
+                    paymentMethod: "online",
+                    paymentProvider: "easebuzz",
+                    paymentStatus: "paid",
+                    transactionReference: response.easepayid || response.txnid || "",
+                  });
+                } else {
+                  setErrorMessage(verifyRes.message || "Easebuzz payment verification failed.");
+                }
+              } else {
+                const cancelMsg =
+                  response?.error_Message ||
+                  response?.error_message ||
+                  (response?.status === "usercancelled"
+                    ? "Transaction was cancelled."
+                    : "Payment could not be completed.");
+                setErrorMessage(cancelMsg);
+              }
+              setIsPlacingOrder(false);
+            },
+            theme: "#700b10",
+          };
+          easebuzzCheckout.initiatePayment(ebzOptions);
+        } else if (gatewayData.checkout_url) {
+          // Strictly navigate in the SAME page/tab (never open in a new tab)
+          window.location.assign(gatewayData.checkout_url);
         } else {
           setErrorMessage("Easebuzz checkout URL not returned.");
           setIsPlacingOrder(false);

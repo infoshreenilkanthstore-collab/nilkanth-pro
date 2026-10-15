@@ -143,7 +143,16 @@ export default async function handler(req, res) {
     <a href="${targetPath}" class="btn">Click here if not redirected</a>
   </div>
   <script>
-    window.location.replace(${JSON.stringify(targetPath)});
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.location.replace(${JSON.stringify(targetPath)});
+        window.close();
+      } else {
+        window.location.replace(${JSON.stringify(targetPath)});
+      }
+    } catch (e) {
+      window.location.replace(${JSON.stringify(targetPath)});
+    }
   </script>
 </body>
 </html>`);

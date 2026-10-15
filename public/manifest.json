@@ -1,0 +1,21 @@
+{
+  "name": "Shri Nilkanth Store",
+  "short_name": "Nilkanth Store",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#700b10",
+  "description": "Devotional and Pooja Essentials",
+  "icons": [
+    {
+      "src": "/nilkanthstore.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/nilkanthstore.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -180,7 +180,7 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
             if (onNavigate) {
               onNavigate("checkout-success", { orderData: confirmedOrder });
             }
-          }, 1000);
+          }, 400);
 
           return () => clearTimeout(timer);
         } else {
