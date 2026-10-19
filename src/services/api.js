@@ -1672,38 +1672,67 @@ export async function syncFinalOrder(payload) {
 }
 
 /**
- * Abandoned Draft Order Cleanup (Step 5: DELETE /backend/api/orders/:id)
- * Deletes the temporary #ABN draft after official #ORD is placed
+ * Update Abandoned Checkout Recovery Status (Step 5: PATCH /api/checkout/abandoned/status)
+ * Transitions status between 'unresolved' and 'resolved' without deleting the order.
  */
-export async function deleteAbandonedOrder(abandonedId) {
-  if (!abandonedId) return { success: false };
+export async function updateAbandonedCheckoutStatus(payload) {
   try {
     const rootBase = API_BASE.replace(/\/shop\/?$/, "");
-    const h = getCartHeaders();
+    const body =
+      typeof payload === "object"
+        ? {
+            id: String(payload.id || payload.order_id || payload.abandoned_id || payload),
+            recovery_status: payload.recovery_status || "resolved",
+          }
+        : { id: String(payload), recovery_status: "resolved" };
 
-    // Call DELETE https://megaecomm.megascale.co.in/backend/api/orders/:id
-    let res = await fetch(`${rootBase}/orders/${abandonedId}`, {
-      method: "DELETE",
+    if (!body.id || body.id === "0" || body.id === "null" || body.id === "undefined") {
+      return { success: false, message: "Missing checkout ID" };
+    }
+
+    const h = {
+      "Content-Type": "application/json",
+      "X-Shopfront-Token": API_TOKEN,
+    };
+
+    // Primary: PATCH /api/checkout/abandoned/status
+    let res = await fetch(`${rootBase}/checkout/abandoned/status`, {
+      method: "PATCH",
       headers: h,
+      body: JSON.stringify(body),
     }).catch(() => null);
 
+    // Fallback: in case routed under /api/shop/checkout/abandoned/status
     if (!res || !res.ok) {
-      res = await fetch(`${API_BASE}/orders/${abandonedId}`, {
-        method: "DELETE",
+      res = await fetch(`${API_BASE}/checkout/abandoned/status`, {
+        method: "PATCH",
         headers: h,
+        body: JSON.stringify(body),
       }).catch(() => null);
     }
 
     if (res && res.ok) {
       const data = await res.json().catch(() => ({}));
-      return { success: true, message: data.message || "Order deleted successfully" };
+      return {
+        success: true,
+        data: data.data || data,
+        message: data.message || "Abandoned checkout status updated",
+      };
     }
 
-    return { success: true };
+    return { success: false, message: "Failed to update abandoned checkout status" };
   } catch (err) {
-    console.warn("Non-blocking cleanup notice:", err);
-    return { success: true };
+    console.warn("Non-blocking abandoned recovery status update notice:", err);
+    return { success: false, message: err.message };
   }
+}
+
+/**
+ * Backward compatibility alias: ensures NO order deletion occurs and resolves status instead.
+ */
+export async function deleteAbandonedOrder(abandonedId) {
+  if (!abandonedId) return { success: false };
+  return await updateAbandonedCheckoutStatus({ id: abandonedId, recovery_status: "resolved" });
 }
 
 /**

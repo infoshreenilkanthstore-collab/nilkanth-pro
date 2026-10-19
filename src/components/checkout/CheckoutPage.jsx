@@ -17,7 +17,7 @@ import {
   initiatePayment,
   verifyPayment,
   syncFinalOrder,
-  deleteAbandonedOrder,
+  updateAbandonedCheckoutStatus,
   clearCartApi,
 } from "../../services/api";
 import { trackInitiateCheckout, trackPurchase } from "../../services/analytics";
@@ -736,9 +736,12 @@ export default function CheckoutPage({
       financial_status: paymentStatus,
     };
 
-    // 2. Phase 4: Cleanup Abandoned Draft (DELETE /orders/:id)
+    // 2. Phase 4: Mark Abandoned Checkout as Resolved (PATCH /checkout/abandoned/status) - No deletion
     if (abandonedCheckoutId) {
-      await deleteAbandonedOrder(abandonedCheckoutId);
+      await updateAbandonedCheckoutStatus({
+        id: String(abandonedCheckoutId),
+        recovery_status: "resolved",
+      });
     }
 
     // 3. Clear server cart and local context

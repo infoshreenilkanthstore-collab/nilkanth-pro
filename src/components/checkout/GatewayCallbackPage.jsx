@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
-import { verifyPayment, syncFinalOrder, deleteAbandonedOrder, clearCartApi } from "../../services/api";
+import { verifyPayment, syncFinalOrder, updateAbandonedCheckoutStatus, clearCartApi } from "../../services/api";
 import { trackPurchase } from "../../services/analytics";
 
 export default function GatewayCallbackPage({ provider = "icici", onNavigate, onPaymentVerified }) {
@@ -145,9 +145,12 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
             financial_status: "paid",
           };
 
-          // Phase 4: Delete Abandoned Order Draft & Clean Cart
+          // Phase 4: Mark Abandoned Checkout as Resolved (PATCH /checkout/abandoned/status) - No deletion
           if (abandonedId) {
-            await deleteAbandonedOrder(abandonedId);
+            await updateAbandonedCheckoutStatus({
+              id: String(abandonedId),
+              recovery_status: "resolved",
+            });
           }
           await clearCartApi();
           sessionStorage.removeItem("nilkanth_checkout_session_id");
