@@ -18,8 +18,57 @@ export default function Footer({ onNavigate }) {
   };
 
   return (
-    <footer id="contact" className="w-full bg-[#700b10] text-white px-4 sm:px-6 md:px-10 lg:px-14 pt-12 md:pt-16 pb-14 md:pb-10 border-t border-[#851016]">
-      <div className="max-w-[1440px] mx-auto">
+    <footer id="contact" className="w-full bg-[#700b10] text-white border-t border-[#851016]">
+      {/* ── App Download Banner Strip (matches footer palette) ── */}
+      <div className="w-full bg-[#faeed0] text-[#2c1d1a] border-b border-[#e5caa0] py-2.5 sm:py-3 px-4">
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-center gap-2.5 sm:gap-4 md:gap-6 text-center">
+          <p className="text-[13px] sm:text-[14px] md:text-[14.5px] font-nunito tracking-tight text-[#2d221e]">
+            Install Shri Nilkanth Store App &amp; Get{' '}
+            <strong className="text-[#700b10] font-extrabold font-nunito tracking-normal">2% Extra Discount</strong>{' '}
+            on App!
+          </p>
+
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-center">
+            <span className="text-[12px] sm:text-[13px] font-nunito text-[#5a423a] font-medium">
+              Available on:
+            </span>
+
+            {/* Google Play Store Badge */}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.megascale.pujanam&pcampaignid=web_share"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download Shri Nilkanth Store on Google Play Store"
+              className="inline-flex items-center gap-1.5 bg-black hover:bg-stone-900 text-white text-[11.5px] sm:text-[12px] font-semibold px-3 sm:px-3.5 py-1.5 rounded-full shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24">
+                <path fill="#fff" d="M3.609 1.814C3.226 2.225 3 2.781 3 3.385v17.23c0 .604.226 1.16.609 1.571l.081.077 9.68-9.68v-.226l-9.68-9.68-.081.077z" />
+                <path fill="#fff" fillOpacity="0.85" d="M16.738 15.533l-3.368-3.367v-.226l3.368-3.367.076.044 3.992 2.27c1.14.648 1.14 1.706 0 2.354l-3.992 2.27-.076.022z" />
+                <path fill="#fff" fillOpacity="0.75" d="M13.447 12.166L3.609 22.004c.376.399.98.448 1.64.073l11.564-6.578-3.366-3.333z" />
+                <path fill="#fff" fillOpacity="0.95" d="M13.447 11.834l3.366-3.333L5.249 1.923c-.66-.375-1.264-.326-1.64.073l9.838 9.838z" />
+              </svg>
+              <span>Play Store</span>
+            </a>
+
+            {/* Apple App Store Badge */}
+            <a
+              href="https://www.apple.com/app-store/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download Shri Nilkanth Store on Apple App Store"
+              className="inline-flex items-center gap-1.5 bg-black hover:bg-stone-900 text-white text-[11.5px] sm:text-[12px] font-semibold px-3 sm:px-3.5 py-1.5 rounded-full shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.96c.64-.78 1.08-1.86.96-2.96-1 .04-2.16.67-2.84 1.46-.59.68-1.12 1.79-.98 2.87 1.12.09 2.22-.59 2.86-1.37z" />
+              </svg>
+              <span>App Store</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 pt-10 md:pt-14 pb-14 md:pb-10">
 
         {/* Main Columns: Grid with responsive column spans for mobile, tablet, laptop & desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-6 xl:gap-8 pb-8 lg:pb-10">
