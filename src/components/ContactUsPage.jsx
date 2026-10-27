@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Phone, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Phone, Clock, CheckCircle2, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { submitEnquiry } from "../services/api";
 
 export default function ContactUsPage({ onNavigate }) {
@@ -396,7 +396,7 @@ export default function ContactUsPage({ onNavigate }) {
         )}
 
         {/* 4. Rounded Gray Info Box matching screenshot */}
-        <div className="mt-8 bg-[#ececec] rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-center space-y-2.5">
+        <div className="mt-8 bg-[#ececec] rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-center space-y-3">
           {/* Email */}
           <div className="flex items-center justify-center gap-2 text-stone-800 text-sm sm:text-[15px]">
             <Mail className="w-4 h-4 text-stone-700 flex-shrink-0" />
@@ -428,6 +428,28 @@ export default function ContactUsPage({ onNavigate }) {
           {/* Time */}
           <div className="text-stone-700 text-sm sm:text-[15px] pt-0.5">
             <strong>Time:</strong> 8:30 to 6:00
+          </div>
+
+          {/* Dispatch Office */}
+          <div className="flex items-start justify-center gap-2 text-stone-800 text-sm sm:text-[15px] pt-1">
+            <MapPin className="w-4 h-4 text-stone-700 flex-shrink-0 mt-1" />
+            <div className="text-left max-w-xl">
+              <strong>Dispatch Office:</strong>{" "}
+              <span className="text-stone-700">
+                Swaminarayan Temple, Shri Nilkanth Store, Ground floor, Block / Survey No - 557, Shree Swaminarayan Gurukul Trust, Poicha, Rajpipla, Gujarat 393145
+              </span>
+            </div>
+          </div>
+
+          {/* Sales Office */}
+          <div className="flex items-start justify-center gap-2 text-stone-800 text-sm sm:text-[15px] pt-1">
+            <MapPin className="w-4 h-4 text-stone-700 flex-shrink-0 mt-1" />
+            <div className="text-left max-w-xl">
+              <strong>Sales Office:</strong>{" "}
+              <span className="text-stone-700">
+                411-412, New Escon Plaza, Chhaparabhatha Rd, Amroli, Surat, Gujarat 394107, India
+              </span>
+            </div>
           </div>
         </div>
       </section>
