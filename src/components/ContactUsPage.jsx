@@ -256,11 +256,10 @@ export default function ContactUsPage({ onNavigate }) {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="First name"
-                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${
-                  errors.firstName && touched.firstName
-                    ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
-                    : "border-stone-300 bg-white focus:border-stone-500"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${errors.firstName && touched.firstName
+                  ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
+                  : "border-stone-300 bg-white focus:border-stone-500"
+                  }`}
               />
               {errors.firstName && touched.firstName && (
                 <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1">
@@ -279,11 +278,10 @@ export default function ContactUsPage({ onNavigate }) {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Last name"
-                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${
-                  errors.lastName && touched.lastName
-                    ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
-                    : "border-stone-300 bg-white focus:border-stone-500"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${errors.lastName && touched.lastName
+                  ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
+                  : "border-stone-300 bg-white focus:border-stone-500"
+                  }`}
               />
               {errors.lastName && touched.lastName && (
                 <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1">
@@ -308,11 +306,10 @@ export default function ContactUsPage({ onNavigate }) {
                   maxLength={10}
                   inputMode="numeric"
                   placeholder="Phone +91"
-                  className={`flex-1 px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${
-                    errors.phone && touched.phone
-                      ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
-                      : "border-stone-300 bg-white focus:border-stone-500"
-                  }`}
+                  className={`flex-1 px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${errors.phone && touched.phone
+                    ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
+                    : "border-stone-300 bg-white focus:border-stone-500"
+                    }`}
                 />
               </div>
               {errors.phone && touched.phone && (
@@ -332,11 +329,10 @@ export default function ContactUsPage({ onNavigate }) {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Email"
-                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${
-                  errors.email && touched.email
-                    ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
-                    : "border-stone-300 bg-white focus:border-stone-500"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs ${errors.email && touched.email
+                  ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
+                  : "border-stone-300 bg-white focus:border-stone-500"
+                  }`}
               />
               {errors.email && touched.email && (
                 <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1">
@@ -355,11 +351,10 @@ export default function ContactUsPage({ onNavigate }) {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Enquiry Message"
-                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs resize-y ${
-                  errors.enquiryMessage && touched.enquiryMessage
-                    ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
-                    : "border-stone-300 bg-white focus:border-stone-500"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border text-stone-800 text-sm placeholder-stone-400 focus:outline-hidden transition-colors shadow-2xs resize-y ${errors.enquiryMessage && touched.enquiryMessage
+                  ? "border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:ring-1 focus:ring-rose-500"
+                  : "border-stone-300 bg-white focus:border-stone-500"
+                  }`}
               />
               {errors.enquiryMessage && touched.enquiryMessage && (
                 <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1">
@@ -427,7 +422,7 @@ export default function ContactUsPage({ onNavigate }) {
 
           {/* Time */}
           <div className="text-stone-700 text-sm sm:text-[15px] pt-0.5">
-            <strong>Time:</strong> 8:30 to 6:00
+            <strong>Time:</strong> 10:30 AM to 6:00 PM
           </div>
 
           {/* Dispatch Office */}
@@ -491,7 +486,7 @@ export default function ContactUsPage({ onNavigate }) {
     </div>
   );
 }
- 
+
 
 
 // import React, { useState } from "react";
