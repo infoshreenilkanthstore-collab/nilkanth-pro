@@ -528,6 +528,21 @@ export default function App() {
                     onSelectProduct={handleProductSelect}
                   />
 
+                  {/* Static Promotional Banner (After Banner Slider, Upper of Our Collections) */}
+                  <section className="w-full bg-[#ffffff] pt-4 sm:pt-6 pb-2 px-4 sm:px-6 md:px-8 lg:px-12">
+                    <div
+                      onClick={() => handleNavigate("shop")}
+                      className="max-w-[95rem] mx-auto overflow-hidden rounded-xl sm:rounded-2xl shadow-xs border border-stone-100 cursor-pointer"
+                    >
+                      <img
+                        src="https://megaecomm.megascale.co.in/backend/media/16/general/623875722fbed5ac54aa7240912aaa8c.webp"
+                        alt="Special Promotional Offer"
+                        className="w-full h-auto object-contain block select-none hover:scale-[1.005] transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                  </section>
+
                   {/* Dynamic Collections Showcase: 5 Columns on Desktop/Laptop & 2-Column Slider on Mobile/Tablet */}
                   <HomeCollectionsSection
                     onNavigate={handleNavigate}

@@ -56,6 +56,16 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
           </div>
         </div>
 
+        {/* Static Promotional Banner */}
+        <div className="w-full overflow-hidden rounded-2xl sm:rounded-3xl shadow-xs border border-stone-200/90 bg-white">
+          <img
+            src="https://megaecomm.megascale.co.in/backend/media/16/general/623875722fbed5ac54aa7240912aaa8c.webp"
+            alt="Nilkanth Store Blessed Offer"
+            className="w-full h-auto object-contain block select-none"
+            loading="lazy"
+          />
+        </div>
+
         {/* Order Details & Summary Card */}
         <div className="bg-white border border-stone-200/90 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
           <h2 className="font-serif text-lg sm:text-xl font-bold text-stone-900 border-b border-stone-100 pb-3 flex items-center gap-2">

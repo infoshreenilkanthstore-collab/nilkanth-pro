@@ -799,6 +799,16 @@ export default function ProductPage({
               </div>
             )}
 
+            {/* Static Promotional Banner (Upper of Description) */}
+            <div className="my-5 overflow-hidden rounded-xl sm:rounded-2xl shadow-xs border border-stone-100">
+              <img
+                src="https://megaecomm.megascale.co.in/backend/media/16/general/623875722fbed5ac54aa7240912aaa8c.webp"
+                alt="Special Promotional Offer"
+                className="w-full h-auto object-contain block select-none"
+                loading="lazy"
+              />
+            </div>
+
             {/* 9. Description Header & Content with 5-6 line clamp + Read More */}
             <div className="pt-3 border-t border-stone-200">
               <h2 className="font-serif text-lg sm:text-xl text-stone-900 mb-3 font-normal">
