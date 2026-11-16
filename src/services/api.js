@@ -6,16 +6,35 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-// In-memory cache + sessionStorage for zero-latency instant reloads
+// In-memory cache + sessionStorage with short TTL
 const cache = {
   products: null,
   productDetails: {},
 };
 
-function getSessionCache(key) {
+// Purge any legacy stale products cache from sessionStorage on load
+try {
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    Object.keys(sessionStorage).forEach((k) => {
+      if (k.startsWith("nilkanth_products_") || k.startsWith("nilkanth_search_")) {
+        sessionStorage.removeItem(k);
+      }
+    });
+  }
+} catch {
+  // sessionStorage blocked or unavailable
+}
+
+function getSessionCache(key, maxAgeMs = 15000) {
   try {
     const raw = sessionStorage.getItem(`nilkanth_${key}`);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed._timestamp && Date.now() - parsed._timestamp < maxAgeMs) {
+        return parsed.data;
+      }
+      sessionStorage.removeItem(`nilkanth_${key}`);
+    }
   } catch {
     // sessionStorage unavailable or private mode
   }
@@ -24,7 +43,7 @@ function getSessionCache(key) {
 
 function setSessionCache(key, data) {
   try {
-    sessionStorage.setItem(`nilkanth_${key}`, JSON.stringify(data));
+    sessionStorage.setItem(`nilkanth_${key}`, JSON.stringify({ _timestamp: Date.now(), data }));
   } catch {
     // quota exceeded or disabled
   }
@@ -32,12 +51,8 @@ function setSessionCache(key, data) {
 
 export async function fetchProducts({ page = 1, limit = 20 } = {}) {
   const cacheKey = `products_${page}_${limit}`;
-  if (cache[cacheKey]) {
-    return cache[cacheKey];
-  }
   const sessionData = getSessionCache(cacheKey);
   if (sessionData) {
-    cache[cacheKey] = sessionData;
     return sessionData;
   }
 
@@ -47,7 +62,6 @@ export async function fetchProducts({ page = 1, limit = 20 } = {}) {
     });
     if (!res.ok) throw new Error(`Failed to fetch products: ${res.statusText}`);
     const data = await res.json();
-    cache[cacheKey] = data;
     setSessionCache(cacheKey, data);
     return data;
   } catch (error) {

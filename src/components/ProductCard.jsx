@@ -44,22 +44,77 @@ export default function ProductCard({ product, onSelectProduct, onAddToCart, onN
 
   // Check if product or its variants are out of stock
   const isOutOfStock = (() => {
-    // 1. Explicit availability flags
-    if (product.availableForSale === false || product.in_stock === false) return true;
-
-    // 2. Check variants if present
-    if (Array.isArray(product.variants) && product.variants.length > 0) {
-      const anyInStock = product.variants.some((v) => {
-        const isAvail = v.availableForSale !== false && v.in_stock !== false;
-        const qty = v.inventoryQuantity ?? v.inventory_quantity ?? v.stock ?? null;
-        return isAvail && (qty === null || Number(qty) > 0);
-      });
-      return !anyInStock;
+    // 1. Explicit availability flag on product (boolean, string, or 0)
+    if (
+      product.availableForSale === false ||
+      String(product.availableForSale) === "false" ||
+      product.availableForSale === 0 ||
+      product.availableForSale === "0" ||
+      product.in_stock === false ||
+      String(product.in_stock) === "false" ||
+      product.in_stock === 0 ||
+      product.in_stock === "0" ||
+      product.is_in_stock === false ||
+      String(product.is_in_stock) === "false" ||
+      product.is_in_stock === 0 ||
+      product.is_in_stock === "0" ||
+      product.stock_status === "outofstock" ||
+      product.stock_status === "out_of_stock"
+    ) {
+      return true;
     }
 
-    // 3. Fallback to product inventory quantity
-    const productQty = product.inventory_quantity ?? product.inventoryQuantity ?? product.stock ?? null;
-    if (productQty !== null && Number(productQty) <= 0) {
+    // 2. Product-level inventory quantity
+    const pQty = product.inventory_quantity ?? product.inventoryQuantity ?? product.stock ?? null;
+    const hasZeroProductQty = pQty !== null && pQty !== undefined && Number(pQty) === 0;
+
+    // 3. Variant checking
+    if (Array.isArray(product.variants) && product.variants.length > 0) {
+      // Check if ANY variant has stock
+      const anyInStockVariant = product.variants.some((v) => {
+        // If variant is explicitly marked unavailable
+        if (
+          v.availableForSale === false ||
+          String(v.availableForSale) === "false" ||
+          v.availableForSale === 0 ||
+          v.availableForSale === "0" ||
+          v.in_stock === false ||
+          String(v.in_stock) === "false" ||
+          v.in_stock === 0 ||
+          v.in_stock === "0" ||
+          v.is_in_stock === false ||
+          String(v.is_in_stock) === "false" ||
+          v.is_in_stock === 0 ||
+          v.is_in_stock === "0" ||
+          v.stock_status === "outofstock" ||
+          v.stock_status === "out_of_stock"
+        ) {
+          return false;
+        }
+
+        // If variant inventory quantity is explicitly 0
+        const vQty = v.inventoryQuantity ?? v.inventory_quantity ?? v.stock ?? null;
+        if (vQty !== null && vQty !== undefined && Number(vQty) === 0) {
+          return false;
+        }
+
+        // If variant has positive inventory
+        if (vQty !== null && vQty !== undefined && Number(vQty) > 0) {
+          return true;
+        }
+
+        // If variant has no inventory specified, but product has 0 inventory
+        if (hasZeroProductQty) {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (!anyInStockVariant) {
+        return true;
+      }
+    } else if (hasZeroProductQty) {
       return true;
     }
 
