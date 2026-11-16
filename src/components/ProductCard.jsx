@@ -42,6 +42,30 @@ export default function ProductCard({ product, onSelectProduct, onAddToCart, onN
   const wishlisted = isWishlisted(product.id);
   const isToggling = togglingIds?.has?.(product.id);
 
+  // Check if product or its variants are out of stock
+  const isOutOfStock = (() => {
+    // 1. Explicit availability flags
+    if (product.availableForSale === false || product.in_stock === false) return true;
+
+    // 2. Check variants if present
+    if (Array.isArray(product.variants) && product.variants.length > 0) {
+      const anyInStock = product.variants.some((v) => {
+        const isAvail = v.availableForSale !== false && v.in_stock !== false;
+        const qty = v.inventoryQuantity ?? v.inventory_quantity ?? v.stock ?? null;
+        return isAvail && (qty === null || Number(qty) > 0);
+      });
+      return !anyInStock;
+    }
+
+    // 3. Fallback to product inventory quantity
+    const productQty = product.inventory_quantity ?? product.inventoryQuantity ?? product.stock ?? null;
+    if (productQty !== null && Number(productQty) <= 0) {
+      return true;
+    }
+
+    return false;
+  })();
+
   // Hover image: second image if available
   const hoverImage =
     product.images?.[1]?.url ||
@@ -60,6 +84,7 @@ export default function ProductCard({ product, onSelectProduct, onAddToCart, onN
   const handleCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart({
       product,
       variantId: product.variants?.[0]?.id || null,
@@ -90,6 +115,13 @@ export default function ProductCard({ product, onSelectProduct, onAddToCart, onN
     >
       {/* Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-stone-100/70 rounded-none">
+
+        {/* Out of Stock Pill Badge */}
+        {isOutOfStock && (
+          <span className="absolute top-2.5 left-2.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full z-10 shadow-xs">
+            Out of Stock
+          </span>
+        )}
 
         {/* Primary Image: fades out + scales up on hover when second image exists */}
         <img
@@ -173,11 +205,16 @@ export default function ProductCard({ product, onSelectProduct, onAddToCart, onN
         <div className="pt-1 mt-auto">
           <button
             type="button"
+            disabled={isOutOfStock}
             onClick={handleCartClick}
-            className="w-full bg-[#700b10] hover:bg-[#54060b] active:scale-[0.98] text-white py-2.5 sm:py-3 px-4 rounded-full font-nunito font-extrabold text-xs sm:text-[13px] tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+            className={`w-full py-2.5 sm:py-3 px-4 rounded-full font-nunito font-extrabold text-xs sm:text-[13px] tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
+              isOutOfStock
+                ? 'bg-[#700b10] opacity-60 text-white cursor-not-allowed shadow-none'
+                : 'bg-[#700b10] hover:bg-[#54060b] active:scale-[0.98] text-white shadow-md hover:shadow-lg cursor-pointer'
+            }`}
           >
             <ShoppingCart className="w-4 h-4 text-white" />
-            ADD TO CART
+            {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
           </button>
         </div>
       </div>

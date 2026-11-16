@@ -213,6 +213,22 @@ export default function WishlistPage({ onNavigate, onSelectProduct }) {
               const itemId = item.id || item.product_id || product.id;
               const isRemoving = removingId === itemId;
 
+              // Check if out of stock
+              const isOutOfStock = (() => {
+                if (product.availableForSale === false || product.in_stock === false) return true;
+                if (Array.isArray(product.variants) && product.variants.length > 0) {
+                  const anyInStock = product.variants.some((v) => {
+                    const isAvail = v.availableForSale !== false && v.in_stock !== false;
+                    const qty = v.inventoryQuantity ?? v.inventory_quantity ?? v.stock ?? null;
+                    return isAvail && (qty === null || Number(qty) > 0);
+                  });
+                  return !anyInStock;
+                }
+                const productQty = product.inventory_quantity ?? product.inventoryQuantity ?? product.stock ?? null;
+                if (productQty !== null && Number(productQty) <= 0) return true;
+                return false;
+              })();
+
               return (
                 <div
                   key={itemId}
@@ -221,6 +237,13 @@ export default function WishlistPage({ onNavigate, onSelectProduct }) {
                 >
                   {/* Image container */}
                   <div className="relative aspect-square w-full overflow-hidden bg-stone-100/70">
+                    {/* Out of Stock Badge */}
+                    {isOutOfStock && (
+                      <span className="absolute top-2.5 left-2.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-xs">
+                        Out of Stock
+                      </span>
+                    )}
+
                     <img
                       src={image}
                       alt={title}
@@ -284,8 +307,9 @@ export default function WishlistPage({ onNavigate, onSelectProduct }) {
 
                         <button
                           type="button"
-                          disabled={addingId === itemId}
+                          disabled={isOutOfStock || addingId === itemId}
                           onClick={async (e) => {
+                            if (isOutOfStock) return;
                             e.stopPropagation();
                             setAddingId(itemId);
                             try {
@@ -302,10 +326,16 @@ export default function WishlistPage({ onNavigate, onSelectProduct }) {
                               setAddingId(null);
                             }
                           }}
-                          className="bg-[#700b10] hover:bg-[#54060b] text-white py-2 sm:py-2.5 px-2 rounded-xl font-nunito font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-2xs hover:shadow-xs cursor-pointer disabled:opacity-70"
+                          className={`py-2 sm:py-2.5 px-2 rounded-xl font-nunito font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-2xs hover:shadow-xs ${
+                            isOutOfStock
+                              ? "bg-[#700b10] opacity-60 text-white cursor-not-allowed"
+                              : "bg-[#700b10] hover:bg-[#54060b] text-white cursor-pointer disabled:opacity-70"
+                          }`}
                         >
                           {addingId === itemId ? (
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : isOutOfStock ? (
+                            <span>Out of Stock</span>
                           ) : (
                             <>
                               <ShoppingBag className="w-3 h-3 text-[#ebd99c]" />
@@ -381,4 +411,3 @@ export default function WishlistPage({ onNavigate, onSelectProduct }) {
     </div>
   );
 }
-

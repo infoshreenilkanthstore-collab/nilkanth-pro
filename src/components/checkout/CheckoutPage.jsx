@@ -1165,11 +1165,10 @@ export default function CheckoutPage({
         {/* Abandoned Recovery Status Alert */}
         {recoveryStatus && (
           <div
-            className={`mb-6 p-4 rounded-2xl border flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm font-semibold transition-all shadow-sm animate-fadeIn ${
-              recoveryStatus.success
+            className={`mb-6 p-4 rounded-2xl border flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm font-semibold transition-all shadow-sm animate-fadeIn ${recoveryStatus.success
                 ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
                 : "bg-amber-50/90 border-amber-200 text-amber-900"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2.5">
               <span className="text-base">{recoveryStatus.success ? "✨" : "ℹ️"}</span>

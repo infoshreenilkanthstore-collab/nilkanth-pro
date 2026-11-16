@@ -90,7 +90,32 @@ export default function ProductDetailModal({ product, onClose }) {
     ? Math.round(((currentComparePrice - currentPrice) / currentComparePrice) * 100)
     : 0;
 
+  // Stock status check
+  const isOutOfStock = (() => {
+    if (selectedVariant) {
+      if (selectedVariant.availableForSale === false || selectedVariant.in_stock === false) return true;
+      const vQty = selectedVariant.inventoryQuantity ?? selectedVariant.inventory_quantity ?? selectedVariant.stock ?? null;
+      if (vQty !== null && Number(vQty) <= 0) return true;
+    }
+    const currentProd = detailedProduct || product;
+    if (currentProd?.availableForSale === false || currentProd?.in_stock === false) return true;
+    const pQty = currentProd?.inventory_quantity ?? currentProd?.inventoryQuantity ?? currentProd?.stock ?? null;
+    if (pQty !== null && Number(pQty) <= 0) {
+      if (currentProd?.variants && currentProd.variants.length > 0) {
+        const anyInStock = currentProd.variants.some((v) => {
+          const avail = v.availableForSale !== false && v.in_stock !== false;
+          const q = v.inventoryQuantity ?? v.inventory_quantity ?? v.stock ?? null;
+          return avail && (q === null || Number(q) > 0);
+        });
+        return !anyInStock;
+      }
+      return true;
+    }
+    return false;
+  })();
+
   const handleAddToCart = async () => {
+    if (isOutOfStock) return;
     const itemToAdd = detailedProduct || product;
     if (!itemToAdd) return;
     setAddedNotice(true);
@@ -168,8 +193,21 @@ export default function ProductDetailModal({ product, onClose }) {
                   {detailedProduct?.category || "Pooja Samagri"}
                 </span>
                 <span className="text-xs text-stone-400">•</span>
-                <span className="text-xs font-medium text-emerald-600 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> In Stock
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                    isOutOfStock
+                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  }`}
+                >
+                  {isOutOfStock ? (
+                    <span>Out of Stock</span>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>In Stock</span>
+                    </>
+                  )}
                 </span>
               </div>
 
@@ -244,15 +282,17 @@ export default function ProductDetailModal({ product, onClose }) {
                 {/* Quantity incrementor */}
                 <div className="flex items-center justify-between border border-stone-200 rounded-2xl p-1 bg-stone-50 w-full sm:w-32">
                   <button
+                    disabled={isOutOfStock}
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-white rounded-xl transition-colors font-bold text-base"
+                    className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-white rounded-xl transition-colors font-bold text-base disabled:opacity-50"
                   >
                     -
                   </button>
                   <span className="font-bold text-sm text-stone-800">{quantity}</span>
                   <button
+                    disabled={isOutOfStock}
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-white rounded-xl transition-colors font-bold text-base"
+                    className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-white rounded-xl transition-colors font-bold text-base disabled:opacity-50"
                   >
                     +
                   </button>
@@ -261,11 +301,16 @@ export default function ProductDetailModal({ product, onClose }) {
                 {/* Add to Cart button */}
                 <button
                   type="button"
+                  disabled={isOutOfStock}
                   onClick={handleAddToCart}
-                  className="flex-1 bg-[#700b10] hover:bg-[#54060b] text-white font-nunito font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 transform active:scale-98 cursor-pointer"
+                  className={`flex-1 font-nunito font-bold py-3.5 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 ${
+                    isOutOfStock
+                      ? "bg-[#700b10] opacity-60 text-white cursor-not-allowed shadow-none"
+                      : "bg-[#700b10] hover:bg-[#54060b] text-white shadow-lg hover:shadow-xl transform active:scale-98 cursor-pointer"
+                  }`}
                 >
                   <ShoppingBag className="w-5 h-5 text-[#ebd99c]" />
-                  Add to Cart
+                  {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                 </button>
 
                 {/* Wishlist toggle button */}
