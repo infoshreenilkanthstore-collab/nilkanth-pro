@@ -1229,6 +1229,74 @@ export async function fetchShippingRates(payload = {}) {
 }
 
 /**
+ * Check if customer is eligible for first-order benefits (e.g. Free shipping above ₹599)
+ * GET /customer/first-order-status?phone=...&order_amount=...
+ */
+export async function fetchFirstOrderStatus({ phone, order_amount }) {
+  if (!phone) {
+    return { success: false, is_first_order: false };
+  }
+  const cleanPhone = String(phone).replace(/\D/g, "").slice(-10);
+  if (cleanPhone.length !== 10) {
+    return { success: false, is_first_order: false };
+  }
+
+  const amount = Number(order_amount || 0);
+
+  try {
+    const customerToken = localStorage.getItem("customer_token");
+    const h = {
+      "X-Shopfront-Token": API_TOKEN,
+      Accept: "application/json",
+    };
+    if (customerToken) {
+      h["Authorization"] = `Bearer ${customerToken}`;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/customer/first-order-status?phone=${encodeURIComponent(cleanPhone)}&order_amount=${amount}`,
+      {
+        method: "GET",
+        headers: h,
+      }
+    );
+
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success && data.data) {
+      const isFirst = Boolean(data.data.is_first_order);
+      const freeShippingObj = data.data.free_shipping || {};
+      const eligible = Boolean(freeShippingObj.eligible ?? (isFirst && amount >= 599));
+
+      return {
+        success: true,
+        is_first_order: isFirst,
+        orders_count: data.data.orders_count || 0,
+        customer: data.data.customer || null,
+        free_shipping: {
+          eligible,
+          enabled: freeShippingObj.enabled ?? true,
+          min_order_amount: Number(freeShippingObj.min_order_amount || 599),
+          current_order_amount: amount,
+          amount_needed_for_free_shipping: Number(
+            freeShippingObj.amount_needed_for_free_shipping ?? Math.max(0, 599 - amount)
+          ),
+          message:
+            freeShippingObj.message ||
+            (eligible
+              ? "Eligible for Free Shipping on first order (Cart total >= ₹599.00)"
+              : `Add ₹${Math.max(0, 599 - amount).toFixed(2)} more to qualify for Free Shipping on your first order`),
+        },
+      };
+    }
+
+    return { success: false, is_first_order: false };
+  } catch (err) {
+    console.error("Error checking customer first-order status:", err);
+    return { success: false, is_first_order: false, error: err.message };
+  }
+}
+
+/**
  * Validate discount coupon using POST /checkout/validate-coupon
  */
 export async function validateCoupon({ code, order_amount }) {

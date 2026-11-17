@@ -12,6 +12,8 @@ export default function CheckoutSummary({
   discountCode = "",
   onApplyCoupon,
   onRemoveCoupon,
+  isFirstOrderFreeEligible = false,
+  firstOrderData = null,
   grandTotal = 0,
   loading = false,
   onUpdateQuantity,
@@ -214,9 +216,26 @@ export default function CheckoutSummary({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-stone-500" /> Shipping</span>
             <span className="font-semibold text-stone-900">
-              {shipping === 0 ? <span className="text-emerald-700 font-bold uppercase text-[11px] tracking-wider">FREE</span> : `Rs.${shipping.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {shipping === 0 ? (
+                <span className="inline-flex items-center gap-1 text-emerald-700 font-bold uppercase text-[11px] tracking-wider">
+                  <span>FREE</span>
+                  {isFirstOrderFreeEligible && (
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-sm normal-case">
+                      (1st Order)
+                    </span>
+                  )}
+                </span>
+              ) : (
+                `Rs.${shipping.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              )}
             </span>
           </div>
+          {firstOrderData?.is_first_order && !isFirstOrderFreeEligible && (
+            <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 flex items-center gap-2">
+              <span className="text-sm">🎁</span>
+              <span>1st Order Special: Add <strong>Rs.{Math.max(0, 599 - subtotal).toFixed(2)}</strong> more to get <strong>FREE Shipping</strong>!</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
               <span>Estimated GST ({taxInclusive ? "Included" : "Added"})</span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   MapPin, Truck, ChevronLeft, ChevronRight, Loader2,
-  CheckCircle2, AlertCircle, Plus, Home,
+  CheckCircle2, Sparkles, AlertCircle, Plus, Home,
 } from "lucide-react";
 import { fetchPincodeDetails } from "../../services/api";
 
@@ -33,6 +33,10 @@ export default function CheckoutShippingStep({
   onAddressListUpdated,       // fn(newAddressList) to refresh parent savedAddresses
   errors = {},
   touched = {},
+  firstOrderData = null,
+  isFirstOrderFreeEligible = false,
+  orderAmount = 0,
+  isCheckingFirstOrder = false,
   onBlurField,
 }) {
   const [pincodeLoading, setPincodeLoading] = useState(false);
@@ -437,6 +441,40 @@ export default function CheckoutShippingStep({
         </div>
       )}
 
+      {/* First Order Promotional Free Shipping Notice */}
+      {isFirstOrderFreeEligible ? (
+        <div className="mb-4 p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 border border-emerald-200/90 rounded-2xl flex items-center gap-3 shadow-2xs animate-fadeIn">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4 text-emerald-700" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-emerald-950 flex items-center gap-1.5 flex-wrap">
+              <span>First Order Welcome Gift: Free Shipping Unlocked!</span>
+              <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 bg-emerald-600 text-white rounded">
+                FREE
+              </span>
+            </p>
+            <p className="text-[11px] text-emerald-800 mt-0.5">
+              As a new devotee placing your 1st order above ₹599, express delivery is completely <strong>FREE</strong>.
+            </p>
+          </div>
+        </div>
+      ) : firstOrderData?.is_first_order ? (
+        <div className="mb-4 p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-3 shadow-2xs animate-fadeIn">
+          <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 text-[#700b10] flex items-center justify-center shrink-0">
+            <Truck className="w-4 h-4 text-[#700b10]" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-stone-900">
+              First Order Special: Get FREE Shipping on ₹599+
+            </p>
+            <p className="text-[11px] text-amber-900 mt-0.5">
+              Add <strong>₹{Math.max(0, (firstOrderData?.free_shipping?.min_order_amount || 599) - orderAmount).toFixed(2)}</strong> more to unlock free delivery on your first order!
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       {/* Shipping Method Selection */}
       <div className="pt-4 border-t border-stone-100 mt-4">
         <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2.5">
@@ -449,7 +487,8 @@ export default function CheckoutShippingStep({
               const isSelected =
                 (selectedShippingRate?.id && selectedShippingRate.id === rateId) ||
                 (selectedShippingRate?.method_id && selectedShippingRate.method_id === rateId);
-              const cost = Number(rate.cost !== undefined ? rate.cost : (rate.rate !== undefined ? rate.rate : 0));
+              const rawCost = Number(rate.cost !== undefined ? rate.cost : (rate.rate !== undefined ? rate.rate : 0));
+              const cost = isFirstOrderFreeEligible ? 0 : rawCost;
               const transitTime = rate.transit_time || rate.estimated_days || "3-5 Business Days";
 
               return (

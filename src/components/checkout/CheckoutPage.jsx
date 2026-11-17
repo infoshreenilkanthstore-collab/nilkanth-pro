@@ -10,6 +10,7 @@ import {
   fetchShippingRates,
   fetchCustomerAddresses,
   fetchStoreInfo,
+  fetchFirstOrderStatus,
   validateCoupon,
   syncAbandonedCheckout,
   recoverAbandonedCheckout,
@@ -109,6 +110,48 @@ export default function CheckoutPage({
   const [selectedProvider, setSelectedProvider] = useState("");
   const [shippingRates, setShippingRates] = useState([]);
   const [selectedShippingRate, setSelectedShippingRate] = useState(null);
+
+  // Customer First Order Status (Free Shipping on >= 599)
+  const [firstOrderData, setFirstOrderData] = useState(null);
+  const [isCheckingFirstOrder, setIsCheckingFirstOrder] = useState(false);
+
+  useEffect(() => {
+    const cleanPhone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
+    if (cleanPhone.length !== 10) {
+      setFirstOrderData(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingFirstOrder(true);
+      try {
+        const res = await fetchFirstOrderStatus({
+          phone: cleanPhone,
+          order_amount: subtotal,
+        });
+        if (res.success) {
+          setFirstOrderData(res);
+        } else {
+          setFirstOrderData(null);
+        }
+      } catch (err) {
+        console.error("Failed checking customer first order status:", err);
+        setFirstOrderData(null);
+      } finally {
+        setIsCheckingFirstOrder(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customer.phone, subtotal]);
+
+  const isFirstOrderFreeEligible = useMemo(() => {
+    return Boolean(
+      firstOrderData?.is_first_order === true &&
+      (subtotal >= (firstOrderData?.free_shipping?.min_order_amount || 599) ||
+        firstOrderData?.free_shipping?.eligible === true)
+    );
+  }, [firstOrderData, subtotal]);
 
   // Discounts
   const [discountCode, setDiscountCode] = useState("");
@@ -230,12 +273,31 @@ export default function CheckoutPage({
   }, [cartItems]);
 
   const shippingCost = useMemo(() => {
+    // 1. Priority: Free shipping on first order >= 599
+    if (isFirstOrderFreeEligible) {
+      return 0;
+    }
     if (selectedShippingRate) {
       const costVal = selectedShippingRate.cost !== undefined ? selectedShippingRate.cost : selectedShippingRate.rate;
       return Number(costVal) || 0;
     }
     return subtotal >= 999 ? 0 : 50;
-  }, [selectedShippingRate, subtotal]);
+  }, [isFirstOrderFreeEligible, selectedShippingRate, subtotal]);
+
+  // Keep selectedShippingRate updated with zero cost when eligible
+  useEffect(() => {
+    if (isFirstOrderFreeEligible) {
+      setSelectedShippingRate((prev) => ({
+        ...(prev || {}),
+        id: prev?.id || "first_order_free",
+        method_id: prev?.method_id || "first_order_free",
+        name: prev?.name?.includes("Free") ? prev.name : "First Order Free Delivery",
+        cost: 0,
+        rate: 0,
+        transit_time: prev?.transit_time || "3-5 business days",
+      }));
+    }
+  }, [isFirstOrderFreeEligible]);
 
   // Tax (GST) Calculations based on storeInfo.tax_inclusive, tax rate and destination state
   const taxCalculations = useMemo(() => {
@@ -1218,6 +1280,10 @@ export default function CheckoutPage({
             <CheckoutShippingStep
               shippingAddress={shippingAddress}
               onShippingAddressChange={handleShippingChangeWithValidation}
+              firstOrderData={firstOrderData}
+              isFirstOrderFreeEligible={isFirstOrderFreeEligible}
+              orderAmount={subtotal}
+              isCheckingFirstOrder={isCheckingFirstOrder}
               shippingRates={shippingRates}
               selectedShippingRate={selectedShippingRate}
               onSelectShippingRate={setSelectedShippingRate}
@@ -1269,6 +1335,8 @@ export default function CheckoutPage({
               tax={taxCalculations.taxAmount}
               taxLines={taxCalculations.taxLines}
               shipping={shippingCost}
+              isFirstOrderFreeEligible={isFirstOrderFreeEligible}
+              firstOrderData={firstOrderData}
               discount={discountAmount}
               discountCode={discountCode}
               onApplyCoupon={handleApplyCoupon}
