@@ -111,48 +111,6 @@ export default function CheckoutPage({
   const [shippingRates, setShippingRates] = useState([]);
   const [selectedShippingRate, setSelectedShippingRate] = useState(null);
 
-  // Customer First Order Status (Free Shipping on >= 599)
-  const [firstOrderData, setFirstOrderData] = useState(null);
-  const [isCheckingFirstOrder, setIsCheckingFirstOrder] = useState(false);
-
-  useEffect(() => {
-    const cleanPhone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
-    if (cleanPhone.length !== 10) {
-      setFirstOrderData(null);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsCheckingFirstOrder(true);
-      try {
-        const res = await fetchFirstOrderStatus({
-          phone: cleanPhone,
-          order_amount: subtotal,
-        });
-        if (res.success) {
-          setFirstOrderData(res);
-        } else {
-          setFirstOrderData(null);
-        }
-      } catch (err) {
-        console.error("Failed checking customer first order status:", err);
-        setFirstOrderData(null);
-      } finally {
-        setIsCheckingFirstOrder(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [customer.phone, subtotal]);
-
-  const isFirstOrderFreeEligible = useMemo(() => {
-    return Boolean(
-      firstOrderData?.is_first_order === true &&
-      (subtotal >= (firstOrderData?.free_shipping?.min_order_amount || 599) ||
-        firstOrderData?.free_shipping?.eligible === true)
-    );
-  }, [firstOrderData, subtotal]);
-
   // Discounts
   const [discountCode, setDiscountCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -271,6 +229,50 @@ export default function CheckoutPage({
   const subtotal = useMemo(() => {
     return cartItems.reduce((acc, it) => acc + (Number(it.price) || 0) * (it.quantity || 1), 0);
   }, [cartItems]);
+
+  // -------------------------------------------------------------
+  // Customer First Order Status (Free Shipping on >= 599)
+  // -------------------------------------------------------------
+  const [firstOrderData, setFirstOrderData] = useState(null);
+  const [isCheckingFirstOrder, setIsCheckingFirstOrder] = useState(false);
+
+  useEffect(() => {
+    const cleanPhone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
+    if (cleanPhone.length !== 10) {
+      setFirstOrderData(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingFirstOrder(true);
+      try {
+        const res = await fetchFirstOrderStatus({
+          phone: cleanPhone,
+          order_amount: subtotal,
+        });
+        if (res.success) {
+          setFirstOrderData(res);
+        } else {
+          setFirstOrderData(null);
+        }
+      } catch (err) {
+        console.error("Failed checking customer first order status:", err);
+        setFirstOrderData(null);
+      } finally {
+        setIsCheckingFirstOrder(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customer.phone, subtotal]);
+
+  const isFirstOrderFreeEligible = useMemo(() => {
+    return Boolean(
+      firstOrderData?.is_first_order === true &&
+      (subtotal >= (firstOrderData?.free_shipping?.min_order_amount || 599) ||
+        firstOrderData?.free_shipping?.eligible === true)
+    );
+  }, [firstOrderData, subtotal]);
 
   const shippingCost = useMemo(() => {
     // 1. Priority: Free shipping on first order >= 599
