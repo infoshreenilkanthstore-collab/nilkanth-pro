@@ -485,10 +485,13 @@ export default function CheckoutShippingStep({
             shippingRates.map((rate, rIdx) => {
               const rateId = rate.id || rate.method_id || `rate_${rIdx}`;
               const isSelected =
-                (selectedShippingRate?.id && selectedShippingRate.id === rateId) ||
-                (selectedShippingRate?.method_id && selectedShippingRate.method_id === rateId);
+                Boolean(selectedShippingRate) &&
+                (selectedShippingRate.id === rateId ||
+                  selectedShippingRate.method_id === rateId ||
+                  (rate.id && (selectedShippingRate.id === rate.id || selectedShippingRate.method_id === rate.id)) ||
+                  (rate.method_id && (selectedShippingRate.id === rate.method_id || selectedShippingRate.method_id === rate.method_id)));
               const rawCost = Number(rate.cost !== undefined ? rate.cost : (rate.rate !== undefined ? rate.rate : 0));
-              const cost = isFirstOrderFreeEligible ? 0 : rawCost;
+              const cost = isFirstOrderFreeEligible || Number(orderAmount || 0) >= 999 ? 0 : rawCost;
               const transitTime = rate.transit_time || rate.estimated_days || "3-5 Business Days";
 
               return (
@@ -514,7 +517,14 @@ export default function CheckoutShippingStep({
                   </div>
                   <span className="font-bold text-sm text-stone-900">
                     {cost === 0 ? (
-                      <span className="text-emerald-700 font-bold uppercase text-xs">FREE</span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-emerald-700 font-bold uppercase text-xs">FREE</span>
+                        {isFirstOrderFreeEligible && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded normal-case">
+                            (1st Order)
+                          </span>
+                        )}
+                      </span>
                     ) : (
                       `₹${cost.toFixed(2)}`
                     )}
@@ -531,7 +541,9 @@ export default function CheckoutShippingStep({
                   <p className="text-[11px] text-stone-500">Delivered within 3-5 business days across India</p>
                 </div>
               </div>
-              <span className="text-emerald-700 font-bold text-xs uppercase">FREE</span>
+              <span className="text-emerald-700 font-bold text-xs uppercase">
+                {isFirstOrderFreeEligible || Number(orderAmount || 0) >= 999 ? "FREE" : "₹50.00"}
+              </span>
             </div>
           )}
         </div>

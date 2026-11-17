@@ -279,27 +279,45 @@ export default function CheckoutPage({
     if (isFirstOrderFreeEligible) {
       return 0;
     }
+    // 2. Standard store free shipping threshold (>= 999)
+    if (subtotal >= 999) {
+      return 0;
+    }
+    // 3. User selected shipping rate
     if (selectedShippingRate) {
-      const costVal = selectedShippingRate.cost !== undefined ? selectedShippingRate.cost : selectedShippingRate.rate;
-      return Number(costVal) || 0;
+      // Find matching rate in shippingRates to get true carrier cost and prevent stale zero overrides
+      const matched = shippingRates.find(
+        (r) =>
+          (r.id && (r.id === selectedShippingRate.id || r.id === selectedShippingRate.method_id)) ||
+          (r.method_id && (r.method_id === selectedShippingRate.method_id || r.method_id === selectedShippingRate.id))
+      );
+      const activeRate = matched || selectedShippingRate;
+      const costVal = activeRate.cost !== undefined ? activeRate.cost : activeRate.rate;
+      const numCost = Number(costVal);
+      if (!isNaN(numCost) && numCost > 0) {
+        return numCost;
+      }
+      if (matched && numCost === 0) {
+        return 0;
+      }
     }
-    return subtotal >= 999 ? 0 : 50;
-  }, [isFirstOrderFreeEligible, selectedShippingRate, subtotal]);
+    return 50;
+  }, [isFirstOrderFreeEligible, selectedShippingRate, shippingRates, subtotal]);
 
-  // Keep selectedShippingRate updated with zero cost when eligible
+  // Keep selectedShippingRate synced with valid shippingRates (revert from first-order overrides when phone changes)
   useEffect(() => {
-    if (isFirstOrderFreeEligible) {
-      setSelectedShippingRate((prev) => ({
-        ...(prev || {}),
-        id: prev?.id || "first_order_free",
-        method_id: prev?.method_id || "first_order_free",
-        name: prev?.name?.includes("Free") ? prev.name : "First Order Free Delivery",
-        cost: 0,
-        rate: 0,
-        transit_time: prev?.transit_time || "3-5 business days",
-      }));
+    if (shippingRates.length > 0) {
+      setSelectedShippingRate((prev) => {
+        if (!prev || prev.id === "first_order_free" || prev.method_id === "first_order_free") {
+          return shippingRates[0];
+        }
+        const matched = shippingRates.find(
+          (r) => (r.id && r.id === prev.id) || (r.method_id && r.method_id === prev.method_id)
+        );
+        return matched || shippingRates[0];
+      });
     }
-  }, [isFirstOrderFreeEligible]);
+  }, [isFirstOrderFreeEligible, shippingRates]);
 
   // Tax (GST) Calculations based on storeInfo.tax_inclusive, tax rate and destination state
   const taxCalculations = useMemo(() => {
@@ -541,7 +559,7 @@ export default function CheckoutPage({
         setShippingRates(sortedRates);
         setSelectedShippingRate((prev) => {
           const prevId = prev?.method_id || prev?.id;
-          if (prevId) {
+          if (prevId && prevId !== "first_order_free") {
             const matched = sortedRates.find((r) => (r.method_id || r.id) === prevId);
             if (matched) return matched;
           }
