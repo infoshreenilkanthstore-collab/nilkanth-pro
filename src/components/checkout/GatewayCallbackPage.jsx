@@ -110,6 +110,10 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
               customerPhone: customer.phone || payload.phone || "",
               customerEmail: customer.email || payload.email || "",
               abandoned_checkout_id: abandonedId || null,
+              abandonedCheckoutId: abandonedId || null,
+              abandonedSessionId: pendingData.sessionId || sessionStorage.getItem("nilkanth_checkout_session_id") || null,
+              sessionId: pendingData.sessionId || sessionStorage.getItem("nilkanth_checkout_session_id") || null,
+              session_id: pendingData.sessionId || sessionStorage.getItem("nilkanth_checkout_session_id") || null,
               items: items.map((it) => ({
                 productId: Number(it.product_id || it.productId || it.id || 0),
                 variantId: Number(it.variant_id || it.variantId || 0) || null,

@@ -804,6 +804,10 @@ export default function CheckoutPage({
       customerPhone: customer.phone,
       customerEmail: customer.email,
       abandoned_checkout_id: Number(abandonedCheckoutId) || null,
+      abandonedCheckoutId: Number(abandonedCheckoutId) || null,
+      abandonedSessionId: sessionId || null,
+      sessionId: sessionId || null,
+      session_id: sessionId || null,
       items: cartItems.map((it) => ({
         productId: Number(it.product_id || it.id || 0),
         variantId: Number(it.variant_id || it.variantId || 0) || null,
