@@ -1578,6 +1578,8 @@ export async function initiatePayment({
   return_url,
   customer,
   amount,
+  is_partial_payment = false,
+  advance_amount,
   productinfo,
   items,
   shipping_address,
@@ -1619,7 +1621,13 @@ export async function initiatePayment({
       phone: cleanPhone,
       productinfo: cleanProductInfo,
     };
-    if (formattedAmount !== undefined) {
+    if (is_partial_payment) {
+      payload.is_partial_payment = true;
+      const partialVal = Number(advance_amount !== undefined ? advance_amount : amount);
+      payload.amount = Number(partialVal.toFixed(2));
+      payload.order_amount = Number(partialVal.toFixed(2));
+      payload.advance_amount = Number(partialVal.toFixed(2));
+    } else if (formattedAmount !== undefined) {
       payload.amount = formattedAmount;
       payload.order_amount = formattedAmount;
     }

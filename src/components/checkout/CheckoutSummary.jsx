@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { ShieldCheck, Tag, ChevronDown, ChevronUp, Sparkles, Truck, Loader2, X, Minus, Plus } from "lucide-react";
 
 export default function CheckoutSummary({
@@ -17,6 +17,9 @@ export default function CheckoutSummary({
   grandTotal = 0,
   loading = false,
   onUpdateQuantity,
+  isPartialPayment = false,
+  advanceAmount = 0,
+  balanceDue = 0,
 }) {
   const [couponInput, setCouponInput] = useState("");
   const [couponMsg, setCouponMsg] = useState(null);
@@ -275,6 +278,34 @@ export default function CheckoutSummary({
               </span>
             </div>
           </div>
+
+          {/* Partial Payment Breakdown */}
+          {isPartialPayment && (
+            <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-1.5 text-xs animate-fadeIn">
+              <div className="flex justify-between items-center text-stone-700 font-bold">
+                <span className="flex items-center gap-1">
+                  <span>Pay Online Now:</span>
+                  <span className="text-[10px] font-extrabold uppercase bg-[#700b10] text-white px-1.5 py-0.2 rounded-md">
+                    Advance
+                  </span>
+                </span>
+                <span className="text-[#700b10] font-extrabold text-sm">
+                  Rs.{advanceAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-stone-600">
+                <span>Remaining on Delivery (COD):</span>
+                <span className="font-bold text-stone-800">
+                  Rs.{balanceDue.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-[10px] text-stone-500 pt-1 border-t border-amber-200/60 leading-tight">
+                {grandTotal > 399
+                  ? "Store Special: Flat ₹100 advance on orders above ₹399!"
+                  : "Store Special: Flat ₹50 advance on orders up to ₹399!"}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Guarantee Seal */}

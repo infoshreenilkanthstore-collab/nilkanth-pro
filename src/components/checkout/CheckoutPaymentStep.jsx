@@ -1,5 +1,5 @@
 import React from "react";
-import { CreditCard, ShieldCheck, ChevronLeft, Lock, Loader2, Banknote, Building2, Zap } from "lucide-react";
+import { CreditCard, ShieldCheck, ChevronLeft, Lock, Loader2, Banknote, Building2, Zap, CheckCircle2 } from "lucide-react";
 
 export default function CheckoutPaymentStep({
   gateways = [],
@@ -11,7 +11,21 @@ export default function CheckoutPaymentStep({
   onBackStep,
   errorMessage = "",
   isOneStep = true,
+  paymentPlan = "full", // "full" (default) or "partial"
+  onChangePaymentPlan,
 }) {
+  // Tiered Partial Payment Rule:
+  // Above 399 -> 100 advance
+  // 399 or below (<= 399) -> 50 advance
+  const advanceAmount = grandTotal > 399 ? 100 : Math.min(grandTotal, 50);
+  const balanceDue = Math.max(0, grandTotal - advanceAmount);
+  const isPartial = paymentPlan === "partial";
+
+  // Filter gateways: when partial payment is chosen, only online gateways can be used to pay the advance token
+  const availableGateways = isPartial
+    ? gateways.filter((gw) => gw.provider !== "cod")
+    : gateways;
+
   const renderGatewayIcon = (provider) => {
     switch (provider) {
       case "razorpay":
@@ -39,7 +53,7 @@ export default function CheckoutPaymentStep({
               Payment Method &amp; Confirmation
             </h2>
             <p className="text-[11px] sm:text-xs text-stone-500 font-sans mt-0.5">
-              Choose your preferred encrypted gateway or Cash on Delivery.
+              Choose 100% Full Payment or Partial Payment (Advance + COD).
             </p>
           </div>
         </div>
@@ -52,74 +66,181 @@ export default function CheckoutPaymentStep({
         </div>
       )}
 
+      {/* 🔹 PAYMENT PLAN SELECTOR (Full Payment First & Default) */}
+      <div className="mb-6 space-y-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-stone-500">
+          SELECT PAYMENT OPTION
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          {/* Card 1: Full Payment (FIRST OPTION & DEFAULT) */}
+          <div
+            onClick={() => {
+              if (onChangePaymentPlan) onChangePaymentPlan("full");
+            }}
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all relative ${
+              !isPartial
+                ? "border-[#700b10] bg-white ring-1 ring-[#700b10]"
+                : "border-stone-200 hover:border-stone-300 bg-white"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider bg-stone-100 text-stone-700 px-2.5 py-0.5 rounded-full">
+                100% PREPAID
+              </span>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  !isPartial ? "border-[#700b10]" : "border-stone-300"
+                }`}
+              >
+                {!isPartial && <div className="w-2.5 h-2.5 rounded-full bg-[#700b10]" />}
+              </div>
+            </div>
+
+            <h3 className="font-bold text-stone-900 text-xs sm:text-sm">
+              Full Payment (100% Prepaid)
+            </h3>
+            <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+              Pay the complete order value of <strong className="text-stone-900">₹{grandTotal.toFixed(2)}</strong> now. Fastest priority dispatch &amp; contact-free delivery.
+            </p>
+
+            <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px]">
+              <span className="text-stone-500">Total to Pay Now:</span>
+              <span className="font-extrabold text-stone-900">₹{grandTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-teal-700 font-semibold mt-0.5">
+              <span>Balance at Delivery:</span>
+              <span>₹0.00 (PAID)</span>
+            </div>
+          </div>
+
+          {/* Card 2: Partial Payment (SECOND OPTION) */}
+          <div
+            onClick={() => {
+              if (onChangePaymentPlan) onChangePaymentPlan("partial");
+              // If current provider was COD, switch to first available online gateway
+              if (selectedProvider === "cod") {
+                const firstOnline = gateways.find((g) => g.provider !== "cod");
+                if (firstOnline && onSelectProvider) {
+                  onSelectProvider(firstOnline.provider);
+                }
+              }
+            }}
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all relative ${
+              isPartial
+                ? "border-[#700b10] bg-white ring-1 ring-[#700b10]"
+                : "border-stone-200 hover:border-stone-300 bg-white"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider bg-[#700b10] text-white px-2.5 py-0.5 rounded-full">
+                <Zap className="w-3 h-3 text-amber-300 fill-amber-300" /> MOST POPULAR
+              </span>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  isPartial ? "border-[#700b10]" : "border-stone-300"
+                }`}
+              >
+                {isPartial && <div className="w-2.5 h-2.5 rounded-full bg-[#700b10]" />}
+              </div>
+            </div>
+
+            <h3 className="font-bold text-stone-900 text-xs sm:text-sm">
+              Partial Payment (Advance + COD)
+            </h3>
+            <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+              Pay <strong className="text-[#700b10]">₹{advanceAmount.toFixed(2)}</strong> online now to confirm order. Pay remaining <strong className="text-stone-900">₹{balanceDue.toFixed(2)}</strong> at delivery.
+            </p>
+
+            <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px]">
+              <span className="text-stone-500">Advance Online:</span>
+              <span className="font-extrabold text-stone-900">₹{advanceAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-stone-700 font-medium mt-0.5">
+              <span className="text-stone-500">Balance on COD:</span>
+              <span className="font-bold text-stone-900">₹{balanceDue.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gateway Options Title */}
+      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-stone-500">
+        {isPartial
+          ? `Choose Online Gateway to Pay ₹${advanceAmount.toFixed(2)} Advance`
+          : "Choose Payment Method"}
+      </div>
+
       {/* Gateway Options */}
       <div className="space-y-3">
-        {gateways.length === 0 ? (
+        {availableGateways.length === 0 ? (
           <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl text-center text-xs text-stone-500">
-            No payment methods are currently available.
+            No payment gateways are currently configured.
           </div>
         ) : (
-          gateways.map((gw) => {
-          const isSelected = selectedProvider === gw.provider;
-          const isCod = gw.provider === "cod";
-          const isTestMode = gw.is_test_mode;
+          availableGateways.map((gw) => {
+            const isSelected = selectedProvider === gw.provider;
+            const isCod = gw.provider === "cod";
+            const isTestMode = gw.is_test_mode;
 
-          return (
-            <label
-              key={gw.provider}
-              onClick={() => onSelectProvider(gw.provider)}
-              className={`block p-4 rounded-xl border cursor-pointer transition-all ${isSelected
-                  ? "border-[#700b10] bg-amber-50/40 ring-1 ring-[#700b10]"
-                  : "border-stone-200 hover:border-stone-300 bg-white"
+            return (
+              <label
+                key={gw.provider}
+                onClick={() => onSelectProvider(gw.provider)}
+                className={`block p-4 rounded-xl border cursor-pointer transition-all ${
+                  isSelected
+                    ? "border-[#700b10] bg-amber-50/40 ring-1 ring-[#700b10]"
+                    : "border-stone-200 hover:border-stone-300 bg-white"
                 }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 p-2 rounded-lg bg-stone-50 border border-stone-200 shrink-0">
-                    {renderGatewayIcon(gw.provider)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs sm:text-sm font-bold text-stone-900">
-                        {gw.display_title || gw.name}
-                      </span>
-                      {isTestMode && (
-                        <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-md">
-                          Test Mode
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 p-2 rounded-lg bg-stone-50 border border-stone-200 shrink-0">
+                      {renderGatewayIcon(gw.provider)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-bold text-stone-900">
+                          {gw.display_title || gw.name}
                         </span>
-                      )}
-                      {isCod && (
-                        <span className="text-[10px] uppercase font-bold bg-green-100 text-green-900 px-1.5 py-0.2 rounded-md">
-                          Cash / Pay at Door
-                        </span>
+                        {isTestMode && (
+                          <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-md">
+                            Test Mode
+                          </span>
+                        )}
+                        {isCod && (
+                          <span className="text-[10px] uppercase font-bold bg-green-100 text-green-900 px-1.5 py-0.2 rounded-md">
+                            Cash / Pay at Door
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-stone-500 text-xs mt-1 leading-snug">
+                        {gw.metadata?.description || gw.metadata?.instructions || "Secure online transaction via 256-bit SSL encryption."}
+                      </p>
+
+                      {/* Extended Gateway Info */}
+                      {isSelected && !isCod && (
+                        <div className="mt-3 pt-2.5 border-t border-amber-200/60 text-[11px] text-stone-600 flex items-center gap-2">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Instant UPI (GPay, PhonePe, Paytm), All Bank Cards &amp; NetBanking.</span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-stone-500 text-xs mt-1 leading-snug">
-                      {gw.metadata?.description || gw.metadata?.instructions || "Secure online transaction via 256-bit SSL encryption."}
-                    </p>
-
-                    {/* Extended Gateway Info */}
-                    {isSelected && !isCod && (
-                      <div className="mt-3 pt-2.5 border-t border-amber-200/60 text-[11px] text-stone-600 flex items-center gap-2">
-                        <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Instant UPI (GPay, PhonePe, Paytm), All Bank Cards &amp; NetBanking.</span>
-                      </div>
-                    )}
                   </div>
-                </div>
 
-                <div className="flex items-center mt-1">
-                  <div
-                    className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${isSelected ? "border-[#700b10] bg-[#700b10]" : "border-stone-300"
+                  <div className="flex items-center mt-1">
+                    <div
+                      className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
+                        isSelected ? "border-[#700b10] bg-[#700b10]" : "border-stone-300"
                       }`}
-                  >
-                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    >
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </label>
-          );
-        })
+              </label>
+            );
+          })
         )}
       </div>
 
@@ -130,7 +251,9 @@ export default function CheckoutPaymentStep({
           <span>Nilkanth Store Trust &amp; Safety Protocol</span>
         </div>
         <p className="text-[11px] text-stone-500 leading-relaxed">
-          By clicking Complete Payment, your encrypted transaction is protected under RBI-compliant gateway standards. Order tracking and receipt will be dispatched via Whatsapp &amp; Email immediately.
+          {isPartial
+            ? `Your ₹${advanceAmount.toFixed(2)} advance payment directly reserves your sacred items in our warehouse. The remaining ₹${balanceDue.toFixed(2)} is collected safely at your door upon delivery.`
+            : "By clicking Complete Payment, your encrypted transaction is protected under RBI-compliant gateway standards. Order tracking and receipt will be dispatched via WhatsApp & Email immediately."}
         </p>
       </div>
 
@@ -151,7 +274,7 @@ export default function CheckoutPaymentStep({
         <button
           type="button"
           onClick={onPlaceOrder}
-          disabled={isPlacingOrder || !selectedProvider || gateways.length === 0}
+          disabled={isPlacingOrder || !selectedProvider || availableGateways.length === 0}
           className="w-full sm:w-auto bg-[#700b10] hover:bg-[#54060b] disabled:opacity-50 text-white py-3.5 px-8 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
         >
           {isPlacingOrder ? (
@@ -163,7 +286,9 @@ export default function CheckoutPaymentStep({
             <>
               <Lock className="w-3.5 h-3.5" />
               <span>
-                {selectedProvider === "cod" ? "Place COD Order" : `Pay ₹${grandTotal.toFixed(2)}`}
+                {isPartial
+                  ? `Pay Advance ₹${advanceAmount.toFixed(2)} & Place Order`
+                  : (selectedProvider === "cod" ? "Place COD Order" : `Pay ₹${grandTotal.toFixed(2)}`)}
               </span>
             </>
           )}

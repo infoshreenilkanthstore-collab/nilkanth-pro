@@ -95,77 +95,92 @@ export default function GatewayCallbackPage({ provider = "icici", onNavigate, on
           const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
           // Phase 3: Convert Abandoned Draft to Official Placed Order (POST /checkout/sync)
+          const isPartial = Boolean(pendingData.is_partial_payment);
+          const advancePaid = isPartial
+            ? Number(pendingData.advance_amount || pendingData.total_paid || payload.amount || 0)
+            : Number(pendingData.total || payload.amount || 0);
+          const grandTotalAmount = Number(pendingData.total || payload.amount || 0);
+          const balanceDue = isPartial ? Math.max(0, grandTotalAmount - advancePaid) : 0;
+
           const syncPayload = {
-            customer_id: null,
-            first_name: customer.firstName || customer.name?.split(" ")[0] || "Customer",
-            last_name: customer.lastName || customer.name?.split(" ").slice(1).join(" ") || "",
-            customerName: customer.name || `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Devoted Customer",
-            customerPhone: customer.phone || payload.phone || "",
-            customerEmail: customer.email || payload.email || "",
-            abandoned_checkout_id: abandonedId || null,
-            items: items.map((it) => ({
-              productId: Number(it.product_id || it.productId || it.id || 0),
-              variantId: Number(it.variant_id || it.variantId || 0) || null,
-              title: it.title || it.product_title || "Sacred Item",
-              sku: it.sku || "",
-              price: Number(it.price || 0),
-              quantity: Number(it.quantity || 1),
-            })),
-            shippingAddress: {
-              name: customer.name || "Devoted Customer",
-              line1: shippingAddress.address1 + (shippingAddress.address2 ? `, ${shippingAddress.address2}` : ""),
-              city: shippingAddress.city || "",
-              state: shippingAddress.state || "",
-              pincode: shippingAddress.pincode || "",
-              country: shippingAddress.country || "India",
-              phone: customer.phone || payload.phone || "",
-              email: customer.email || payload.email || "",
-            },
-            subtotal: Number(pendingData.total || payload.amount || 0),
-            discountAmount: Number(pendingData.discountAmount || 0),
-            discountCode: pendingData.discountCode || "",
-            shippingAmount: Number(pendingData.shippingAmount || 0),
-            shippingMethod: pendingData.shippingMethod || "Standard Shipping",
-            taxAmount: Number(pendingData.taxAmount || 0),
-            total: Number(pendingData.total || payload.amount || 0),
-            currency: "INR",
-            paymentMethod: "online",
-            paymentProvider: provider,
-            paymentStatus: "paid",
-            transactionReference: payload["Unique Ref Number"] || payload.txnid || payload.easepayid || "",
-            device_type: "desktop",
-            is_mobile: false,
-          };
+              customer_id: null,
+              first_name: customer.firstName || customer.name?.split(" ")[0] || "Customer",
+              last_name: customer.lastName || customer.name?.split(" ").slice(1).join(" ") || "",
+              customerName: customer.name || `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Devoted Customer",
+              customerPhone: customer.phone || payload.phone || "",
+              customerEmail: customer.email || payload.email || "",
+              abandoned_checkout_id: abandonedId || null,
+              items: items.map((it) => ({
+                productId: Number(it.product_id || it.productId || it.id || 0),
+                variantId: Number(it.variant_id || it.variantId || 0) || null,
+                title: it.title || it.product_title || "Sacred Item",
+                sku: it.sku || "",
+                price: Number(it.price || 0),
+                quantity: Number(it.quantity || 1),
+              })),
+              shippingAddress: {
+                name: customer.name || "Devoted Customer",
+                line1: shippingAddress.address1 + (shippingAddress.address2 ? `, ${shippingAddress.address2}` : ""),
+                city: shippingAddress.city || "",
+                state: shippingAddress.state || "",
+                pincode: shippingAddress.pincode || "",
+                country: shippingAddress.country || "India",
+                phone: customer.phone || payload.phone || "",
+                email: customer.email || payload.email || "",
+              },
+              subtotal: Number(pendingData.subtotal || grandTotalAmount),
+              discountAmount: Number(pendingData.discountAmount || 0),
+              discountCode: pendingData.discountCode || "",
+              shippingAmount: Number(pendingData.shippingAmount || 0),
+              shippingMethod: pendingData.shippingMethod || "Standard Shipping",
+              taxAmount: Number(pendingData.taxAmount || 0),
+              total: grandTotalAmount,
+              currency: "INR",
+              paymentMethod: isPartial ? "partial_cod" : "online",
+              paymentProvider: provider,
+              paymentStatus: isPartial ? "partially_paid" : "paid",
+              is_partial_payment: isPartial,
+              total_paid: advancePaid,
+              advance_amount: isPartial ? advancePaid : undefined,
+              balance_due: balanceDue,
+              transactionReference: payload["Unique Ref Number"] || payload.txnid || payload.easepayid || "",
+              device_type: "desktop",
+              is_mobile: false,
+            };
 
-          const syncRes = await syncFinalOrder(syncPayload);
-          const officialOrderData = syncRes?.data || {
-            id: abandonedId,
-            order_number: `ORD-${abandonedId}`,
-            total: pendingData.total || payload.amount,
-            financial_status: "paid",
-          };
+            const syncRes = await syncFinalOrder(syncPayload);
+            const officialOrderData = syncRes?.data || {
+              id: abandonedId,
+              order_number: `ORD-${abandonedId}`,
+              total: grandTotalAmount,
+              financial_status: isPartial ? "partially_paid" : "paid",
+            };
 
-          // Phase 4: Mark Abandoned Checkout as Resolved (PATCH /checkout/abandoned/status) - No deletion
-          if (abandonedId) {
-            await updateAbandonedCheckoutStatus({
-              id: String(abandonedId),
-              recovery_status: "resolved",
-            });
-          }
-          await clearCartApi();
-          sessionStorage.removeItem("nilkanth_checkout_session_id");
-          sessionStorage.removeItem("nilkanth_pending_checkout");
+            // Phase 4: Mark Abandoned Checkout as Resolved (PATCH /checkout/abandoned/status) - No deletion
+            if (abandonedId) {
+              await updateAbandonedCheckoutStatus({
+                id: String(abandonedId),
+                recovery_status: "resolved",
+              });
+            }
+            await clearCartApi();
+            sessionStorage.removeItem("nilkanth_checkout_session_id");
+            sessionStorage.removeItem("nilkanth_pending_checkout");
 
-          const confirmedOrder = {
-            ...officialOrderData,
-            customer,
-            shipping_address: shippingAddress,
-            items,
-            total: Number(officialOrderData.total || pendingData.total || payload.amount || 0),
-            provider,
-            payment_method: "online",
-            financial_status: "paid",
-          };
+            const confirmedOrder = {
+              ...officialOrderData,
+              customer,
+              shipping_address: shippingAddress,
+              items,
+              total: grandTotalAmount,
+              total_paid: advancePaid,
+              balance_due: balanceDue,
+              is_partial_payment: isPartial,
+              advance_amount: isPartial ? advancePaid : undefined,
+              provider,
+              payment_method: isPartial ? "partial_cod" : "online",
+              financial_status: isPartial ? "partially_paid" : "paid",
+            };
 
           // Persist confirmed order in session
           sessionStorage.setItem("nilkanth_last_placed_order", JSON.stringify(confirmedOrder));

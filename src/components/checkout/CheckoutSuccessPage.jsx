@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle2, Package, Truck, ShieldCheck, ArrowRight, MessageCircle, Download } from "lucide-react";
+import { CheckCircle2, Package, Truck, ShieldCheck, ArrowRight, MessageCircle, Download, Zap } from "lucide-react";
 import { trackPurchase } from "../../services/analytics";
 
 export default function CheckoutSuccessPage({ orderData: propOrderData, onNavigate }) {
@@ -27,8 +27,11 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
   const items = orderData?.items || [];
   const customer = orderData?.customer || {};
   const shippingAddress = orderData?.shipping_address || {};
-  const total = orderData?.total || orderData?.amount || 0;
+  const total = Number(orderData?.total || orderData?.amount || 0);
   const isCod = orderData?.provider === "cod" || orderData?.payment_method === "cod";
+  const isPartial = orderData?.financial_status === "partially_paid" || Boolean(orderData?.is_partial_payment) || orderData?.payment_method === "partial_cod";
+  const totalPaid = Number(orderData?.total_paid || orderData?.advance_amount || 0);
+  const balanceDue = orderData?.balance_due !== undefined ? Number(orderData.balance_due) : Math.max(0, total - totalPaid);
 
   return (
     <div className="min-h-screen bg-[#fcfaf7] py-10 sm:py-16 px-4 sm:px-6 lg:px-8 font-nunito animate-fadeIn">
@@ -40,14 +43,20 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
           </div>
 
           <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#700b10] bg-amber-50 border border-amber-200 px-3 py-1 rounded-full inline-block mb-3">
-            {isCod ? "Cash on Delivery Order Confirmed" : "Payment Verified & Order Confirmed"}
+            {isPartial
+              ? "⚡ Partial Advance Received • COD Order Confirmed"
+              : isCod
+              ? "Cash on Delivery Order Confirmed"
+              : "Payment Verified & Order Confirmed"}
           </span>
 
           <h1 className="font-serif text-2xl sm:text-4xl font-bold text-stone-900 tracking-tight">
             Jai Swaminarayan, {customer.name || customer.firstName || "Devoted Customer"}!
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm mt-2 max-w-md mx-auto leading-relaxed">
-            Thank you for your blessed order. We have received your sacred items request and are preparing it with pure devotion.
+            {isPartial
+              ? `We have received your advance payment of ₹${totalPaid.toFixed(2)}. Your sacred items are being prepared with pure sanctity. Please keep the remaining ₹${balanceDue.toFixed(2)} ready at delivery.`
+              : "Thank you for your blessed order. We have received your sacred items request and are preparing it with pure devotion."}
           </p>
 
           <div className="mt-6 inline-flex items-center gap-3 bg-stone-50 border border-stone-200/80 px-4 py-2.5 rounded-2xl text-xs font-mono">
@@ -97,12 +106,27 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
             <p className="text-xs text-stone-500">All purchased items confirmed.</p>
           )}
 
-          {/* Total */}
-          <div className="pt-4 border-t border-stone-200 flex justify-between items-baseline">
-            <span className="font-bold text-stone-700 text-sm">Grand Total Amount</span>
-            <span className="font-serif text-xl sm:text-2xl font-extrabold text-[#700b10]">
-              ₹{Number(total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </span>
+          {/* Total & Partial Payment Breakdown */}
+          <div className="pt-4 border-t border-stone-200 space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="font-bold text-stone-700 text-sm">Grand Total Amount</span>
+              <span className="font-serif text-xl sm:text-2xl font-extrabold text-stone-900">
+                ₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {isPartial && (
+              <div className="mt-3 p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl space-y-2 text-xs">
+                <div className="flex justify-between items-center text-emerald-700 font-bold">
+                  <span>Advance Payment (Paid Online):</span>
+                  <span>-₹{totalPaid.toFixed(2)} (PAID)</span>
+                </div>
+                <div className="flex justify-between items-center text-[#700b10] font-extrabold text-sm pt-2 border-t border-amber-200/70">
+                  <span>Pending Balance at Delivery:</span>
+                  <span>₹{balanceDue.toFixed(2)} (CASH ON DELIVERY)</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Shipping Address & Status Grid */}

@@ -372,6 +372,23 @@ export default function CheckoutPage({
     return Math.max(0, tot);
   }, [subtotal, discountAmount, shippingCost, taxCalculations]);
 
+  // Payment Plan: "full" (100% Prepaid Online or Full COD) or "partial" (Advance Token + COD)
+  // Default to Full Payment as requested
+  const [paymentPlan, setPaymentPlan] = useState("full");
+
+  // Tiered Partial Payment Rule:
+  // Above 399 -> Flat 100 advance
+  // 399 or below (<= 399) -> Flat 50 advance
+  const advanceAmount = useMemo(() => {
+    return grandTotal > 399 ? 100 : Math.min(grandTotal, 50);
+  }, [grandTotal]);
+
+  const balanceDue = useMemo(() => {
+    return Math.max(0, grandTotal - advanceAmount);
+  }, [grandTotal, advanceAmount]);
+
+  const isPartialPayment = paymentPlan === "partial";
+
   const handleSelectSavedAddress = (addr) => {
     setSelectedAddressId(addr.id);
     setShippingAddress({
@@ -760,12 +777,24 @@ export default function CheckoutPage({
     paymentProvider,
     paymentStatus,
     transactionReference = "",
+    is_partial_payment = false,
+    total_paid,
+    advance_amount,
+    balance_due,
   }) => {
     const customerPayload = {
       name: `${customer.firstName} ${customer.lastName}`.trim() || "Devoted Customer",
       phone: customer.phone,
       email: customer.email,
     };
+
+    const finalTotalPaid = total_paid !== undefined
+      ? total_paid
+      : (paymentStatus === "paid" ? grandTotal : 0);
+
+    const finalBalanceDue = balance_due !== undefined
+      ? balance_due
+      : Math.max(0, grandTotal - finalTotalPaid);
 
     const syncPayload = {
       customer_id: currentUser?.id || null,
@@ -804,6 +833,10 @@ export default function CheckoutPage({
       paymentMethod: paymentMethod,
       paymentProvider: paymentProvider,
       paymentStatus: paymentStatus,
+      is_partial_payment: Boolean(is_partial_payment),
+      total_paid: finalTotalPaid,
+      advance_amount: advance_amount,
+      balance_due: finalBalanceDue,
       transactionReference: transactionReference || "",
       device_type: "desktop",
       is_mobile: false,
@@ -838,6 +871,10 @@ export default function CheckoutPage({
       shipping_address: shippingAddress,
       items: cartItems,
       total: Number(officialOrderData.total || grandTotal),
+      total_paid: finalTotalPaid,
+      balance_due: finalBalanceDue,
+      is_partial_payment: Boolean(is_partial_payment),
+      advance_amount: advance_amount,
       provider: paymentProvider,
       payment_method: paymentMethod,
       financial_status: paymentStatus,
@@ -937,13 +974,18 @@ export default function CheckoutPage({
         : `Order #${orderId}`
       ).replace(/[^a-zA-Z0-9, -]/g, "").slice(0, 90) || "Nilkanth Store Order";
 
+      const isPartial = paymentPlan === "partial";
+      const chargeAmount = isPartial ? advanceAmount : grandTotal;
+
       // 2. Initiate Payment with Gateway
       const initRes = await initiatePayment({
         order_id: orderId,
         provider: selectedProvider,
         return_url: `${window.location.origin}/api/checkout/callback/${selectedProvider}`,
         customer: customerPayload,
-        amount: grandTotal,
+        amount: chargeAmount,
+        is_partial_payment: isPartial,
+        advance_amount: isPartial ? advanceAmount : undefined,
         productinfo: productInfoStr,
         items: cartItems,
         shipping_address: shippingAddress,
@@ -969,6 +1011,11 @@ export default function CheckoutPage({
           shipping_address: shippingAddress,
           items: cartItems,
           total: grandTotal,
+          charge_amount: chargeAmount,
+          is_partial_payment: isPartial,
+          advance_amount: isPartial ? advanceAmount : undefined,
+          balance_due: isPartial ? balanceDue : 0,
+          total_paid: isPartial ? advanceAmount : grandTotal,
           subtotal: subtotal,
           discountAmount: discountAmount,
           discountCode: discountCode,
@@ -987,10 +1034,12 @@ export default function CheckoutPage({
 
         const options = {
           key: gatewayData.key_id || "rzp_test_1234567890abcdef",
-          amount: gatewayData.amount || Math.round(grandTotal * 100),
+          amount: gatewayData.amount || Math.round(chargeAmount * 100),
           currency: gatewayData.currency || "INR",
           name: "Nilkanth Store",
-          description: "Consecrated Spiritual Items Order",
+          description: isPartial
+            ? `Advance Token Payment (Balance ₹${balanceDue.toFixed(2)} on COD)`
+            : "Consecrated Spiritual Items Order",
           order_id: gatewayData.razorpay_order_id,
           prefill: {
             name: customerPayload.name,
@@ -1016,9 +1065,13 @@ export default function CheckoutPage({
             if (verifyRes.success) {
               await finalizeOfficialOrder({
                 abandonedCheckoutId: orderId,
-                paymentMethod: "online",
+                paymentMethod: isPartial ? "partial_cod" : "online",
                 paymentProvider: "razorpay",
-                paymentStatus: "paid",
+                paymentStatus: isPartial ? "partially_paid" : "paid",
+                is_partial_payment: isPartial,
+                total_paid: isPartial ? advanceAmount : grandTotal,
+                advance_amount: isPartial ? advanceAmount : undefined,
+                balance_due: isPartial ? balanceDue : 0,
                 transactionReference: response.razorpay_payment_id,
               });
             } else {
@@ -1136,9 +1189,13 @@ export default function CheckoutPage({
                 if (verifyRes.success) {
                   await finalizeOfficialOrder({
                     abandonedCheckoutId: orderId,
-                    paymentMethod: "online",
+                    paymentMethod: isPartial ? "partial_cod" : "online",
                     paymentProvider: "easebuzz",
-                    paymentStatus: "paid",
+                    paymentStatus: isPartial ? "partially_paid" : "paid",
+                    is_partial_payment: isPartial,
+                    total_paid: isPartial ? advanceAmount : grandTotal,
+                    advance_amount: isPartial ? advanceAmount : undefined,
+                    balance_due: isPartial ? balanceDue : 0,
                     transactionReference: response.easepayid || response.txnid || "",
                   });
                 } else {
@@ -1344,6 +1401,8 @@ export default function CheckoutPage({
               onPlaceOrder={handlePlaceOrder}
               errorMessage={errorMessage}
               isOneStep={true}
+              paymentPlan={paymentPlan}
+              onChangePaymentPlan={setPaymentPlan}
             />
           </div>
 
@@ -1364,6 +1423,9 @@ export default function CheckoutPage({
               onUpdateQuantity={updateQuantity}
               grandTotal={grandTotal}
               loading={loading || isPlacingOrder}
+              isPartialPayment={isPartialPayment}
+              advanceAmount={advanceAmount}
+              balanceDue={balanceDue}
             />
           </div>
         </div>
