@@ -46,8 +46,8 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
             {isPartial
               ? "⚡ Partial Advance Received • COD Order Confirmed"
               : isCod
-              ? "Cash on Delivery Order Confirmed"
-              : "Payment Verified & Order Confirmed"}
+                ? "Cash on Delivery Order Confirmed"
+                : "Payment Verified & Order Confirmed"}
           </span>
 
           <h1 className="font-serif text-2xl sm:text-4xl font-bold text-stone-900 tracking-tight">
@@ -63,16 +63,6 @@ export default function CheckoutSuccessPage({ orderData: propOrderData, onNaviga
             <span className="text-stone-500 font-sans">Order Reference:</span>
             <strong className="text-stone-900 font-bold text-sm">{orderNumber}</strong>
           </div>
-        </div>
-
-        {/* Static Promotional Banner */}
-        <div className="w-full overflow-hidden rounded-2xl sm:rounded-3xl shadow-xs border border-stone-200/90 bg-white">
-          <img
-            src="https://megaecomm.megascale.co.in/backend/media/16/general/623875722fbed5ac54aa7240912aaa8c.webp"
-            alt="Nilkanth Store Blessed Offer"
-            className="w-full h-auto object-contain block select-none"
-            loading="lazy"
-          />
         </div>
 
         {/* Order Details & Summary Card */}
