@@ -18,6 +18,7 @@ import {
 import { fetchProductByIdOrHandle } from '../services/api';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import ProductFaqAccordion from './ProductFaqAccordion';
 
 export default function ProductDetailModal({ product, onClose }) {
   const { isWishlisted, toggleWishlist, togglingIds } = useWishlist();
@@ -435,6 +436,9 @@ export default function ProductDetailModal({ product, onClose }) {
                   </div>
                 )}
               </div>
+
+              {/* FAQ Accordion (only when available in metafields) */}
+              <ProductFaqAccordion metafields={detailedProduct?.metafields || product?.metafields} />
 
             </div>
           </div>

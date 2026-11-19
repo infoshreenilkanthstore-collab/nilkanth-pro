@@ -23,6 +23,7 @@ import { trackPageView, trackProductView, trackAddToCart, trackInitiateCheckout,
 import ProductCard from "./ProductCard";
 import BestSellerSection from "./BestSellerSection";
 import ProductReviewSection from "./ProductReviewSection";
+import ProductFaqAccordion from "./ProductFaqAccordion";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 
@@ -926,6 +927,9 @@ export default function ProductPage({
                 </div>
               )}
             </div>
+
+            {/* 9.6. FAQ Accordion Section (Only when FAQ exists in metafields) */}
+            <ProductFaqAccordion metafields={product?.metafields} />
 
             {/* 10. Four Circular Trust Badges Image matching reference */}
             <div className="pt-5 mt-5 border-t border-stone-200 flex justify-center">
