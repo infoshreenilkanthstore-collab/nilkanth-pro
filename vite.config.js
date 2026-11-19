@@ -57,6 +57,18 @@ export default defineConfig({
   ],
   server: {
     host: true, // or '0.0.0.0' to expose on local IP / network
+    proxy: {
+      '/meta-products.xml': {
+        target: 'https://megaecomm.megascale.co.in/backend/api/shop/meta-products.xml?token=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d3690e704f526300',
+        changeOrigin: true,
+        rewrite: () => '',
+      },
+      '/sitemap.xml': {
+        target: 'https://megaecomm.megascale.co.in/backend/api/shop/sitemap.xml?token=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d3690e704f526300',
+        changeOrigin: true,
+        rewrite: () => '',
+      },
+    },
   },
   build: {
     rollupOptions: {

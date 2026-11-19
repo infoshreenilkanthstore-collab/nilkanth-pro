@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/meta-products.xml",
+      "destination": "https://megaecomm.megascale.co.in/backend/api/shop/meta-products.xml?token=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d3690e704f526300"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://megaecomm.megascale.co.in/backend/api/shop/sitemap.xml?token=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d3690e704f526300"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
