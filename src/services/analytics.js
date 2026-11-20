@@ -181,6 +181,51 @@ export function trackInitiateCheckout(cartItems, cartTotal) {
   });
 }
 
+// ─── Add Payment Info ────────────────────────────────────────────────────────
+
+/**
+ * Track addition/confirmation of payment information.
+ * Call when the customer confirms and submits their payment method at checkout.
+ * @param {Array}  cartItems   - Array of cart line items
+ * @param {number} totalValue  - Total value in INR
+ * @param {string} paymentType - Provider name ('razorpay', 'icici', 'easebuzz', 'cod', etc.)
+ */
+export function trackAddPaymentInfo(cartItems, totalValue, paymentType = "online") {
+  if (!cartItems || cartItems.length === 0) return;
+
+  const ids = cartItems.map((it) => String(it.product_id || it.productId || it.id || ""));
+  const numItems = cartItems.reduce((s, it) => s + (Number(it.quantity) || 1), 0);
+  const total = Number(totalValue) || cartItems.reduce((s, it) => s + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
+
+  // GA4 — add_payment_info
+  _gtag("event", "add_payment_info", {
+    currency: "INR",
+    value: total,
+    payment_type: paymentType,
+    items: cartItems.map((it) => ({
+      item_id: String(it.product_id || it.productId || it.id || ""),
+      item_name: it.title || it.product_title || "",
+      price: Number(it.price || 0),
+      quantity: Number(it.quantity || 1),
+    })),
+  });
+
+  // Meta Pixel — AddPaymentInfo
+  _fbq("track", "AddPaymentInfo", {
+    content_ids: ids,
+    content_type: "product",
+    contents: cartItems.map((it) => ({
+      id: String(it.product_id || it.productId || it.id || ""),
+      quantity: Number(it.quantity || 1),
+      item_price: Number(it.price || 0),
+    })),
+    currency: "INR",
+    value: total,
+    num_items: numItems,
+    payment_type: paymentType,
+  });
+}
+
 // ─── Purchase ─────────────────────────────────────────────────────────────────
 
 const _trackedPurchaseIds = new Set();

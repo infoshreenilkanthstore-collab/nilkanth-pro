@@ -21,7 +21,7 @@ import {
   updateAbandonedCheckoutStatus,
   clearCartApi,
 } from "../../services/api";
-import { trackInitiateCheckout, trackPurchase } from "../../services/analytics";
+import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from "../../services/analytics";
 
 // Dynamic script loader utility
 function loadExternalScript(src) {
@@ -980,6 +980,9 @@ export default function CheckoutPage({
 
       const isPartial = paymentPlan === "partial";
       const chargeAmount = isPartial ? advanceAmount : grandTotal;
+
+      // Track Meta Pixel & GA4 AddPaymentInfo standard event
+      trackAddPaymentInfo(cartItems, grandTotal, selectedProvider);
 
       // 2. Initiate Payment with Gateway
       const initRes = await initiatePayment({
